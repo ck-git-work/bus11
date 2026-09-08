@@ -90,37 +90,14 @@
     }
 
     .video {
-      position: relative;
+      display: block;
+      width: 100%;
+      height: auto;
       aspect-ratio: 16/9;
       background: var(--teal-dark);
       border-radius: 10px;
       margin: 22px 0 0;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      text-align: center;
       overflow: hidden
-    }
-
-    .video .play {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: #fff;
-      display: grid;
-      place-items: center;
-      margin: 0 auto 10px
-    }
-
-    .video .play svg {
-      margin-left: 4px
-    }
-
-    .video p {
-      margin: 0;
-      font-size: .95rem;
-      opacity: .9;
-      padding: 0 20px
     }
 
     section {
@@ -342,14 +319,11 @@
         <li>Room MCC 17</li>
         <li>Chris Koranda</li>
       </ul>
-      <div class="video" role="img" aria-label="Welcome video placeholder">
-        <div>
-          <div class="play"><svg width="26" height="26" viewBox="0 0 24 24" fill="#14566B">
-              <path d="M8 5v14l11-7z" />
-            </svg></div>
-          <p>Welcome video, about two minutes.<br>Filming soon; the embed goes here.</p>
-        </div>
-      </div>
+      <video class="video" controls preload="metadata" playsinline poster="welcome-poster.jpg"
+        aria-label="Welcome video from Chris Koranda">
+        <source src="welcome.mp4" type="video/mp4">
+        <p>Your browser can't play this video. <a href="welcome.mp4">Download it instead.</a></p>
+      </video>
     </div>
   </header>
 
@@ -397,7 +371,7 @@
     <section>
       <h2>Before the first day</h2>
       <ol class="todo">
-        <li><b>Watch the welcome video above</b><small></small></li>
+        <li><b>Watch the welcome video above</b><small>It's under two minutes.</small></li>
         <li><b>Read the syllabus</b><small>This website offers a good overview of the class but the syllabus has all the
             details. You should have received a .pdf of the syllabus attached to the e-mail I sent welcoming you to the
             class.</small></li>
