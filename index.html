@@ -443,6 +443,25 @@
     <footer>Chris Koranda · De Anza College · Fall 2026</footer>
   </div>
 
+  <script>
+    // The `default` attribute on <track> is only a hint: browsers may ignore it when the
+    // device has its own captions preference (iOS Accessibility > Subtitles & Captioning).
+    // Turning the track on explicitly makes captions start visible everywhere. The player's
+    // CC button still lets a student switch them off.
+    (function () {
+      var video = document.querySelector('video');
+      if (!video) return;
+      function showCaptions() {
+        var tracks = video.textTracks || [];
+        for (var i = 0; i < tracks.length; i++) {
+          if (tracks[i].kind === 'captions') tracks[i].mode = 'showing';
+        }
+      }
+      showCaptions();
+      video.addEventListener('loadedmetadata', showCaptions);
+    })();
+  </script>
+
 </body>
 
 </html>
