@@ -31,7 +31,7 @@
   .item { text-align: left; cursor: pointer; transition: transform .08s; }
   .item:hover { transform: translateY(-2px); }
   .item.sel { border-color: var(--gold); border-width: 3px; background: #FFFDF6; }
-  .item input.name { width: 100%; border: 0; background: transparent; font-weight: 700; font-size: clamp(20px, 2.3vw, 30px); padding: 2px 0; }
+  .item .name { font-weight: 700; font-size: clamp(20px, 2.3vw, 30px); padding: 2px 0; }
   .item .price { display: flex; align-items: baseline; gap: 2px; font-family: Arial, sans-serif; font-weight: 700; font-size: clamp(24px, 3vw, 40px); color: var(--gold); }
   .item .price input { width: 5.2ch; border: 0; border-bottom: 2px dashed transparent; background: transparent; font-weight: 700; color: var(--gold); padding: 0; }
   .item input:hover, .item input:focus { border-bottom-color: var(--border); outline: none; }
@@ -188,10 +188,10 @@ function buildSteps() {
 
 /* ---------------------------- views ---------------------------- */
 function vLanding() {
-  var h = '<h1>Let’s buy something expensive</h1><p class="sub">Vote as a class, then click the winner. Names and prices can be edited.</p><div class="grid items">';
+  var h = '<h1>Let’s buy something expensive</h1><p class="sub">Vote as a class, then click the winner. The price can be changed.</p><div class="grid items">';
   S.items.forEach(function (it, i) {
     h += '<div class="card item' + (i === S.sel ? " sel" : "") + '" data-pick="' + i + '">' +
-      '<input class="name" data-name="' + i + '" value="' + esc(it.name) + '" aria-label="Item name">' +
+      '<div class="name">' + esc(it.name) + '</div>' +
       '<div class="price">$<input data-price="' + i + '" inputmode="numeric" value="' + (Number(it.price) || 0) + '" aria-label="Price"></div></div>';
   });
   h += '</div>';
@@ -350,8 +350,7 @@ app.addEventListener("click", function (e) {
 });
 app.addEventListener("change", function (e) {
   var t = e.target, num = function () { return Math.max(0, Number(String(t.value).replace(/[^0-9.]/g, "")) || 0); };
-  if (t.hasAttribute("data-name")) { S.items[Number(t.getAttribute("data-name"))].name = t.value || "Item"; }
-  else if (t.hasAttribute("data-price")) { var i = Number(t.getAttribute("data-price")); S.items[i].price = num(); S.sel = i; }
+  if (t.hasAttribute("data-price")) { var i = Number(t.getAttribute("data-price")); S.items[i].price = num(); S.sel = i; }
   else if (t.id === "prc") { S.items[S.sel].price = num(); }
   else if (t.hasAttribute("data-type")) { var p = S.plan[Number(t.getAttribute("data-type"))]; p.t = t.value; if (p.t === "fixed" && !p.amt) p.amt = 100; }
   else if (t.hasAttribute("data-amt")) { S.plan[Number(t.getAttribute("data-amt"))].amt = num(); }
