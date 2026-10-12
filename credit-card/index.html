@@ -226,6 +226,7 @@ function column(p, res, k, state) {
     '<table><tr><td>Price</td><td>' + money(price()) + '</td></tr>' +
     '<tr class="int"><td>Interest</td><td>' + (res.interest ? "+ " : "") + money(res.interest) + '</td></tr>' +
     '<tr><td>Time</td><td>' + timeText(res.months) + '</td></tr>' +
+    '<tr class="int"><td>Share to interest</td><td>' + Math.round(res.interest / res.total * 100) + '%</td></tr>' +
     '<tr><td>Rewards</td><td>' + money(rew, true) + '</td></tr></table>' +
     (res.bumped ? '<div class="note">Some months the card required more than ' + money(p.amt || 0) + '.</div>' : "") + '</div>';
 }
