@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BUS 11 · Matt's new card</title>
+<style>
+  :root { --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #6B7280; --bg: #F5F7FA; --border: #8A9AB5; --tint: #F6EFD9; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--navy); font-family: Calibri, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 520px; margin: 0 auto; padding: 20px 16px 8px; }
+  h1 { font-family: Arial, Helvetica, sans-serif; font-size: 28px; line-height: 1.15; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0 0 16px; }
+  .label { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .plastic { background: var(--navy); color: #fff; border-radius: 16px; padding: 18px 20px; aspect-ratio: 1.586; max-height: 210px; width: 100%;
+    display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 6px 16px rgba(27,42,73,.25); }
+  .plastic .brand { font-family: Arial, sans-serif; font-weight: 700; font-size: 19px; color: var(--lgold); }
+  .plastic .num { font-family: "Courier New", monospace; font-size: 19px; letter-spacing: 2px; opacity: .9; }
+  .plastic .who { font-size: 17px; letter-spacing: 2px; }
+  .card { background: #fff; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-top: 16px; }
+  .apr { font-family: Arial, sans-serif; font-weight: 700; font-size: 56px; line-height: 1; color: var(--gold); margin: 8px 0 2px; }
+  .cap { color: var(--muted); font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 18px; margin-top: 4px; }
+  td { padding: 10px 0; border-top: 1px solid #E4E8EF; vertical-align: top; }
+  tr:first-child td { border-top: 0; }
+  td:first-child { color: var(--muted); width: 42%; padding-right: 10px; }
+  td:last-child { font-weight: 700; }
+  .band { background: var(--tint); border-radius: 14px; padding: 14px 18px; font-size: 20px; font-weight: 700; margin-top: 16px; }
+  footer { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: 12px; padding: 14px 16px 22px; line-height: 1.35; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Welcome, Matt.</h1>
+  <p class="sub">You’re approved. Your new credit card is on its way.</p>
+
+  <div class="plastic">
+    <div class="brand">Quicksilver</div>
+    <div class="num">•••• •••• •••• 0011</div>
+    <div class="who">MATT</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Your interest rate on purchases</div>
+    <div class="apr" id="apr"></div>
+    <div class="cap">APR (annual percentage rate)</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Your card’s terms</div>
+    <table>
+      <tr><td>Annual fee</td><td>$0</td></tr>
+      <tr><td>Rewards</td><td>1.5% cash back on every purchase</td></tr>
+      <tr><td>Payment due</td><td>At least 25 days after each bill</td></tr>
+      <tr><td>Interest</td><td>None on purchases if you pay the full balance by the due date each month</td></tr>
+      <tr><td>Minimum payment</td><td>The greater of $25, or 1% of your balance plus that month’s interest</td></tr>
+      <tr><td>Late fee</td><td>Up to $40</td></tr>
+    </table>
+  </div>
+
+  <div class="band">Compare your offer with the people around you. What do you notice?</div>
+</main>
+<footer>BUS 11 class simulation. This is not a real offer and is not affiliated with Capital One. Terms are based on the Capital One Quicksilver terms published October 11, 2026; the introductory rate is left out.</footer>
+
+<script>
+/* Each phone is given one of the card's three published rates at random,
+   and keeps it if the page is reloaded. Adding ?v=1, ?v=2 or ?v=3 to the
+   address shows a chosen version (for the instructor). */
+var RATES = [18.74, 24.74, 28.74];
+var KEY = "bus11matt_rate";
+var pick = null;
+var m = /[?&]v=([123])/.exec(location.search);
+if (m) pick = Number(m[1]) - 1;
+if (pick === null) { try { var s = localStorage.getItem(KEY); if (s !== null && RATES[Number(s)]) pick = Number(s); } catch (e) {} }
+if (pick === null) { pick = Math.floor(Math.random() * RATES.length); try { localStorage.setItem(KEY, String(pick)); } catch (e) {} }
+document.getElementById("apr").textContent = RATES[pick].toFixed(2) + "%";
+</script>
+</body>
+</html>

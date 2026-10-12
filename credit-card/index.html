@@ -104,16 +104,12 @@
 
 <script>
 /* ------------------------------------------------------------------
-   EDIT HERE: the items the class votes on, and the card's terms.
+   EDIT HERE: what goes on the card, and the card's terms.
    Card terms are Capital One Quicksilver's published rates and fees,
    read from capitalone.com on October 11, 2026.
 ------------------------------------------------------------------- */
 var ITEMS = [
-  { name: "Item A", price: 2000 },
-  { name: "Item B", price: 2250 },
-  { name: "Item C", price: 2500 },
-  { name: "Item D", price: 2750 },
-  { name: "Item E", price: 3000 }
+  { name: "iPhone Duo", price: 2200 }   // $2,000 plus tax. Add more lines here to bring back a class vote.
 ];
 var CARD = {
   name: "Capital One Quicksilver",
@@ -153,9 +149,9 @@ function simulate(price, apr, plan) {
 }
 
 /* ---------------------------- state ---------------------------- */
-var S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 };
-try { var saved = JSON.parse(localStorage.getItem("bus11cc") || "null"); if (saved && saved.items && saved.plan) S = saved; } catch (e) {}
-function save() { try { localStorage.setItem("bus11cc", JSON.stringify(S)); } catch (e) {} }
+var S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: ITEMS.length === 1 ? 0 : -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 };
+try { var saved = JSON.parse(localStorage.getItem("bus11cc2") || "null"); if (saved && saved.items && saved.plan) S = saved; } catch (e) {}
+function save() { try { localStorage.setItem("bus11cc2", JSON.stringify(S)); } catch (e) {} }
 
 function item() { return S.items[S.sel] || { name: "our purchase", price: 0 }; }
 function price() { return Math.max(0, Number(item().price) || 0); }
@@ -188,14 +184,16 @@ function buildSteps() {
 
 /* ---------------------------- views ---------------------------- */
 function vLanding() {
-  var h = '<h1>Let’s buy something expensive</h1><p class="sub">Vote as a class, then click the winner. The price can be changed.</p><div class="grid items">';
+  var one = S.items.length === 1;
+  var h = one ? '<h1>Matt buys something expensive</h1><p class="sub">It goes on his credit card. The price can be changed.</p><div class="grid items">'
+    : '<h1>Let’s buy something expensive</h1><p class="sub">Vote as a class, then click the winner. The price can be changed.</p><div class="grid items">';
   S.items.forEach(function (it, i) {
     h += '<div class="card item' + (i === S.sel ? " sel" : "") + '" data-pick="' + i + '">' +
       '<div class="name">' + esc(it.name) + '</div>' +
       '<div class="price">$<input data-price="' + i + '" inputmode="numeric" value="' + (Number(it.price) || 0) + '" aria-label="Price"></div></div>';
   });
   h += '</div>';
-  h += '<div class="band">' + (S.sel < 0 ? "Pick one to put on the card." : "We’re buying " + esc(item().name) + " for " + money(price()) + ".") + '</div>';
+  h += '<div class="band">' + (S.sel < 0 ? "Pick one to put on the card." : "We’re buying the " + esc(item().name) + " for " + money(price()) + ".") + '</div>';
   return h;
 }
 
@@ -233,7 +231,7 @@ function column(p, res, k, state) {
 
 function vReveal(k) {
   var ps = plans(), rs = results(), p = ps[k], res = rs[k];
-  var h = '<h1>What did ' + esc(item().name) + ' really cost?</h1><p class="sub">' + money(price()) + ' on the card at ' + apr().toFixed(2) + '%.</p>';
+  var h = '<h1>What did the ' + esc(item().name) + ' really cost?</h1><p class="sub">' + money(price()) + ' on the card at ' + apr().toFixed(2) + '%.</p>';
   h += '<div class="grid cols" style="--n:' + ps.length + '">';
   ps.forEach(function (q, i) { h += column(q, rs[i], i, i < k ? "shown" : i === k ? "new" : "hidden"); });
   h += '</div>';
@@ -327,7 +325,7 @@ function markPicked() {
   var cards = app.querySelectorAll(".item");
   for (var i = 0; i < cards.length; i++) cards[i].classList.toggle("sel", Number(cards[i].getAttribute("data-pick")) === S.sel);
   var band = app.querySelector(".band");
-  if (band) band.textContent = "We’re buying " + item().name + " for " + money(price()) + ".";
+  if (band) band.textContent = "We’re buying the " + item().name + " for " + money(price()) + ".";
   document.getElementById("next").disabled = false;
   save();
 }
@@ -337,7 +335,7 @@ document.getElementById("back").onclick = function () { go(-1); };
 document.getElementById("next").onclick = function () { go(1); };
 document.getElementById("edit").onclick = function () { if (S.sel >= 0) { S.step = 1; render(); } };
 document.getElementById("restart").onclick = function () {
-  S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 }; render(); };
+  S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: ITEMS.length === 1 ? 0 : -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 }; render(); };
 
 app.addEventListener("click", function (e) {
   var t = e.target, pick = t.closest("[data-pick]"), rate = t.closest("[data-rate]");

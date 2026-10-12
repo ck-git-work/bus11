@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BUS 11 · Matt's first bill</title>
+<style>
+  :root { --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #6B7280; --bg: #F5F7FA; --border: #8A9AB5; --tint: #F6EFD9; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--navy); font-family: Calibri, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 520px; margin: 0 auto; padding: 20px 16px 8px; }
+  h1 { font-family: Arial, Helvetica, sans-serif; font-size: 28px; line-height: 1.15; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0 0 16px; }
+  .label { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .card { background: #fff; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-top: 16px; }
+  .card.gold { border-color: var(--gold); border-width: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 19px; margin-top: 6px; }
+  td { padding: 9px 0; border-top: 1px solid #E4E8EF; }
+  tr:first-child td { border-top: 0; }
+  td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
+  tr.due td { border-top: 2px solid var(--navy); font-size: 1.12em; font-weight: 700; }
+  tr.int td:last-child { color: var(--gold); }
+  .big { font-family: Arial, sans-serif; font-weight: 700; font-size: 54px; line-height: 1.05; margin: 8px 0 2px; }
+  .cap { color: var(--muted); font-size: 16px; }
+  .note { color: var(--muted); font-size: 15px; margin-top: 10px; }
+  button.pay { display: block; width: 100%; margin-top: 16px; border: 0; border-radius: 14px; background: var(--navy); color: #fff;
+    font: inherit; font-size: 22px; font-weight: 700; padding: 18px 14px; cursor: pointer; }
+  button.pay small { display: block; font-weight: 400; font-size: 15px; opacity: .85; margin-top: 2px; }
+  .band { background: var(--tint); border-radius: 14px; padding: 14px 18px; font-size: 20px; font-weight: 700; margin-top: 16px; }
+  a.back { display: inline-block; margin-top: 14px; color: var(--muted); font-size: 15px; text-decoration: underline; cursor: pointer; }
+  footer { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: 12px; padding: 14px 16px 22px; line-height: 1.35; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<footer>BUS 11 class simulation, not a real bill and not affiliated with Capital One. Based on the Capital One Quicksilver terms published October 11, 2026. Assumes the introductory rate has ended, no other purchases, no late payments, and interest figured monthly. A real statement uses daily balances, so actual amounts differ slightly.</footer>
+
+<script>
+/* ------------------------------------------------------------------
+   EDIT HERE: the purchase, the rate, and the four versions of Matt.
+------------------------------------------------------------------- */
+var ITEM = "iPhone Duo", PRICE = 2200, APR = 24.74;
+var REWARDS = 0.015, MIN_FLOOR = 25, MIN_PCT = 0.01;
+var PLANS = [ { t: "full" }, { t: "fixed", amt: 150 }, { t: "fixed", amt: 100 }, { t: "min" } ];
+
+/* The same math as the main demo page. Bill 1 carries no interest (the grace
+   period). After that, interest is one month of the APR on what is still owed. */
+function r2(x) { return Math.round(Number((x * 100).toFixed(6))) / 100; }
+function simulate(price, apr, plan) {
+  var rate = apr / 1200, bal = price, m = 0, interest = 0, rows = [];
+  while (bal > 0.004 && m < 1200) {
+    m++;
+    var i = m === 1 ? 0 : r2(bal * rate);
+    var stmt = r2(bal + i);
+    var minDue = stmt < MIN_FLOOR ? stmt : Math.min(stmt, Math.max(MIN_FLOOR, r2(MIN_PCT * stmt + i)));
+    var pay = plan.t === "full" ? stmt : plan.t === "min" ? minDue : Math.max(plan.amt, minDue);
+    pay = Math.min(pay, stmt);
+    rows.push({ m: m, start: bal, interest: i, minDue: minDue, pay: pay });
+    interest = r2(interest + i);
+    bal = r2(stmt - pay);
+  }
+  return { months: m, interest: interest, total: r2(price + interest), rows: rows };
+}
+function money(x, cents) {
+  return x.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+}
+function timeText(m) {
+  if (m === 1) return "1 month";
+  if (m < 24) return m + " months";
+  var y = Math.floor(m / 12), mo = m % 12;
+  return y + (y === 1 ? " year" : " years") + (mo ? " " + mo + (mo === 1 ? " month" : " months") : "");
+}
+
+/* Each phone is given one of the four versions of Matt at random and keeps it
+   if the page is reloaded. Adding ?v=1 ... ?v=4 to the address shows a chosen
+   version (for the instructor). */
+var KEY = "bus11matt_plan", PAID = "bus11matt_paid";
+var pick = null, forced = false;
+var q = /[?&]v=([1234])/.exec(location.search);
+if (q) { pick = Number(q[1]) - 1; forced = true; }
+if (pick === null) { try { var s = localStorage.getItem(KEY); if (s !== null && PLANS[Number(s)]) pick = Number(s); } catch (e) {} }
+if (pick === null) { pick = Math.floor(Math.random() * PLANS.length); try { localStorage.setItem(KEY, String(pick)); } catch (e) {} }
+var plan = PLANS[pick], res = simulate(PRICE, APR, plan), b1 = res.rows[0], rewards = r2(PRICE * REWARDS);
+var paid = false;
+if (!forced) { try { paid = localStorage.getItem(PAID) === "1"; } catch (e) {} }
+
+var app = document.getElementById("app");
+
+function vBill() {
+  var btn = plan.t === "full" ? "Pay it all: " + money(PRICE) + "<small>the full balance</small>"
+    : plan.t === "min" ? "Pay the minimum: " + money(b1.minDue, true) + "<small>and the minimum on every bill after this</small>"
+    : "Pay " + money(plan.amt) + "<small>and " + money(plan.amt) + " on every bill after this</small>";
+  return '<h1>Your first bill is here, Matt.</h1><p class="sub">You put an ' + ITEM + ' on your card.</p>' +
+    '<div class="card"><div class="label">Bill 1</div><table>' +
+    '<tr><td>' + ITEM + ', with tax</td><td>' + money(PRICE, true) + '</td></tr>' +
+    '<tr><td>Interest this month</td><td>' + money(0, true) + '</td></tr>' +
+    '<tr class="due"><td>Balance</td><td>' + money(PRICE, true) + '</td></tr>' +
+    '<tr><td>Minimum payment due</td><td>' + money(b1.minDue, true) + '</td></tr>' +
+    '<tr><td>Your rate</td><td>' + APR.toFixed(2) + '% APR</td></tr>' +
+    '<tr><td>Cash back earned</td><td>' + money(rewards, true) + '</td></tr></table></div>' +
+    '<div class="note">This version of Matt has decided how he pays his card.</div>' +
+    '<button class="pay" id="pay">' + btn + '</button>';
+}
+
+function vResult() {
+  var name = plan.t === "full" ? "paid it all" : plan.t === "min" ? "paid only the minimum" : "paid " + money(plan.amt) + " a month";
+  var h = '<h1>What did the ' + ITEM + ' really cost?</h1><p class="sub">This Matt ' + name + '.</p>' +
+    '<div class="card gold"><div class="label">Total paid</div><div class="big">' + money(res.total) + '</div>' +
+    '<div class="cap">for a ' + money(PRICE) + ' purchase at ' + APR.toFixed(2) + '%</div>' +
+    '<table style="margin-top:14px"><tr><td>Price</td><td>' + money(PRICE) + '</td></tr>' +
+    '<tr class="int"><td>Interest paid</td><td>' + (res.interest ? "+ " : "") + money(res.interest) + '</td></tr>' +
+    '<tr><td>Time to pay it off</td><td>' + timeText(res.months) + '</td></tr>' +
+    '<tr class="int"><td>Share of payments that was interest</td><td>' + Math.round(res.interest / res.total * 100) + '%</td></tr>' +
+    '<tr><td>Cash back earned</td><td>' + money(rewards, true) + '</td></tr></table></div>';
+  if (plan.t === "full") h += '<div class="note">Paid in full on the first bill, so the card never charged interest.</div>';
+  if (plan.t === "min" && res.rows[1]) { var b2 = res.rows[1];
+    h += '<div class="note">On bill 2 the minimum was ' + money(b2.minDue, true) + '. Of that, ' + money(b2.interest, true) + ' was interest and only ' + money(r2(b2.pay - b2.interest), true) + ' came off what Matt owed.</div>'; }
+  h += '<div class="band">Be ready to tell the class: what it cost, the interest, how long it took, and the cash back.</div>' +
+    '<a class="back" id="again">see the bill again</a>';
+  return h;
+}
+
+function render() {
+  app.innerHTML = paid ? vResult() : vBill();
+  var p = document.getElementById("pay"), a = document.getElementById("again");
+  if (p) p.onclick = function () { paid = true; if (!forced) { try { localStorage.setItem(PAID, "1"); } catch (e) {} } render(); window.scrollTo(0, 0); };
+  if (a) a.onclick = function () { paid = false; if (!forced) { try { localStorage.removeItem(PAID); } catch (e) {} } render(); window.scrollTo(0, 0); };
+}
+render();
+</script>
+</body>
+</html>
