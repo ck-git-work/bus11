@@ -120,6 +120,8 @@ var CARD = {
   asOf: "October 11, 2026"
 };
 var DEFAULT_PLAN = [ { t: "full" }, { t: "fixed", amt: 150 }, { t: "fixed", amt: 100 }, { t: "min" } ];
+var PRICE_EDITABLE = false;   // true lets the price be typed over on the page
+var SHOW_BILLS = false;       // true adds two "Bill 1 / Bill 2" steps before the minimum-only result
 var COLORS = ["#4A6FA5", "#1B2A49", "#9AA8C0", "#C8972B"];
 
 /* ---------------------------- the math ---------------------------- */
@@ -150,8 +152,8 @@ function simulate(price, apr, plan) {
 
 /* ---------------------------- state ---------------------------- */
 var S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: ITEMS.length === 1 ? 0 : -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 };
-try { var saved = JSON.parse(localStorage.getItem("bus11cc2") || "null"); if (saved && saved.items && saved.plan) S = saved; } catch (e) {}
-function save() { try { localStorage.setItem("bus11cc2", JSON.stringify(S)); } catch (e) {} }
+try { var saved = JSON.parse(localStorage.getItem("bus11cc3") || "null"); if (saved && saved.items && saved.plan) S = saved; } catch (e) {}
+function save() { try { localStorage.setItem("bus11cc3", JSON.stringify(S)); } catch (e) {} }
 
 function item() { return S.items[S.sel] || { name: "our purchase", price: 0 }; }
 function price() { return Math.max(0, Number(item().price) || 0); }
@@ -175,7 +177,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&
 function buildSteps() {
   var st = [{ v: "landing" }, { v: "setup" }];
   plans().forEach(function (p, k) {
-    if (p.t === "min") { st.push({ v: "bill", k: k, n: 1 }); st.push({ v: "bill", k: k, n: 2 }); }
+    if (SHOW_BILLS && p.t === "min") { st.push({ v: "bill", k: k, n: 1 }); st.push({ v: "bill", k: k, n: 2 }); }
     st.push({ v: "reveal", k: k });
   });
   st.push({ v: "bars" }); st.push({ v: "lines" });
@@ -185,12 +187,12 @@ function buildSteps() {
 /* ---------------------------- views ---------------------------- */
 function vLanding() {
   var one = S.items.length === 1;
-  var h = one ? '<h1>Matt buys something expensive</h1><p class="sub">It goes on his credit card. The price can be changed.</p><div class="grid items">'
+  var h = one ? '<h1>Matt buys something expensive</h1><p class="sub">It goes on his credit card.' + (PRICE_EDITABLE ? ' The price can be changed.' : '') + '</p><div class="grid items">'
     : '<h1>Let’s buy something expensive</h1><p class="sub">Vote as a class, then click the winner. The price can be changed.</p><div class="grid items">';
   S.items.forEach(function (it, i) {
     h += '<div class="card item' + (i === S.sel ? " sel" : "") + '" data-pick="' + i + '">' +
       '<div class="name">' + esc(it.name) + '</div>' +
-      '<div class="price">$<input data-price="' + i + '" inputmode="numeric" value="' + (Number(it.price) || 0) + '" aria-label="Price"></div></div>';
+      '<div class="price">' + (PRICE_EDITABLE ? '$<input data-price="' + i + '" inputmode="numeric" value="' + (Number(it.price) || 0) + '" aria-label="Price">' : money(Number(it.price) || 0)) + '</div></div>';
   });
   h += '</div>';
   h += '<div class="band">' + (S.sel < 0 ? "Pick one to put on the card." : "We’re buying the " + esc(item().name) + " for " + money(price()) + ".") + '</div>';
@@ -199,7 +201,7 @@ function vLanding() {
 
 function vSetup() {
   var h = '<h1>It goes on our credit card</h1><p class="sub">' + esc(item().name) + ' on a ' + CARD.name + '.</p><div class="grid two">';
-  h += '<div class="card"><div class="label">The purchase</div><div class="row">' + esc(item().name) + ' &nbsp; $<input class="pr" id="prc" inputmode="numeric" value="' + price() + '"></div>' +
+  h += '<div class="card"><div class="label">The purchase</div><div class="row">' + esc(item().name) + ' &nbsp; ' + (PRICE_EDITABLE ? '$<input class="pr" id="prc" inputmode="numeric" value="' + price() + '">' : '<b>' + money(price()) + '</b>') + '</div>' +
     '<div class="label" style="margin-top:22px">Our interest rate</div><div class="row">';
   CARD.rates.forEach(function (r, i) { h += '<button class="pill' + (i === S.rate ? " on" : "") + '" data-rate="' + i + '">' + r.apr.toFixed(2) + '%<small>' + r.tag + '</small></button>'; });
   h += '</div><div class="note">Your credit decides which of the three you get.</div>' +
@@ -237,7 +239,7 @@ function vReveal(k) {
   h += '</div>';
   var rew = r2(price() * CARD.rewards), msg;
   if (p.t === "full") msg = "No interest. And " + money(rew, true) + " back in rewards.";
-  else if (res.interest > price()) msg = "The interest (" + money(res.interest) + ") is more than the purchase itself.";
+  else if (res.interest > price()) msg = "It took " + timeText(res.months) + " to pay off. The interest (" + money(res.interest) + ") is more than the purchase itself.";
   else msg = "We paid " + money(res.interest) + " in interest to spread it over " + timeText(res.months) + ". Rewards earned: still " + money(rew, true) + ".";
   return h + '<div class="band">' + msg + '</div>';
 }
