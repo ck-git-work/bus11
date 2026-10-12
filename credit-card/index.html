@@ -322,6 +322,15 @@ function render() {
   document.getElementById("foot").textContent = CARD.name + " terms as published by Capital One, " + CARD.asOf + ". Assumes the introductory rate has ended, no other purchases, no late payments, and interest figured monthly. A real statement uses daily balances, so actual amounts differ slightly.";
   save();
 }
+// Select a card without redrawing the page, so typing in its name or price isn't interrupted.
+function markPicked() {
+  var cards = app.querySelectorAll(".item");
+  for (var i = 0; i < cards.length; i++) cards[i].classList.toggle("sel", Number(cards[i].getAttribute("data-pick")) === S.sel);
+  var band = app.querySelector(".band");
+  if (band) band.textContent = "We’re buying " + item().name + " for " + money(price()) + ".";
+  document.getElementById("next").disabled = false;
+  save();
+}
 function go(d) { S.step = Math.max(0, Math.min(steps.length - 1, S.step + d)); render(); window.scrollTo(0, 0); }
 
 document.getElementById("back").onclick = function () { go(-1); };
@@ -332,7 +341,11 @@ document.getElementById("restart").onclick = function () {
 
 app.addEventListener("click", function (e) {
   var t = e.target, pick = t.closest("[data-pick]"), rate = t.closest("[data-rate]");
-  if (pick && t.tagName !== "INPUT") { S.sel = Number(pick.getAttribute("data-pick")); render(); }
+  if (pick) {
+    S.sel = Number(pick.getAttribute("data-pick"));
+    if (t.tagName === "INPUT") markPicked();   // keep the cursor in the box being edited
+    else render();
+  }
   if (rate) { S.rate = Number(rate.getAttribute("data-rate")); render(); }
 });
 app.addEventListener("change", function (e) {
