@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BUS 11 · Let's buy something expensive</title>
+<style>
+  :root {
+    --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #6B7280;
+    --bg: #F5F7FA; --card: #FFFFFF; --border: #8A9AB5; --tint: #F6EFD9;
+    --slate: #4A6FA5; --mist: #9AA8C0;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--navy);
+    font-family: Calibri, "Segoe UI", Helvetica, Arial, sans-serif; }
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+  main { flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: clamp(16px, 3vw, 44px) clamp(16px, 4vw, 56px) 8px; }
+  h1 { font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: clamp(26px, 4vw, 50px); margin: 0 0 6px; line-height: 1.12; }
+  .sub { color: var(--muted); font-size: clamp(16px, 1.9vw, 24px); margin: 0 0 clamp(14px, 2.2vw, 28px); }
+  .label { font-size: clamp(12px, 1.25vw, 16px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: clamp(14px, 1.8vw, 24px); }
+  .band { background: var(--tint); border-radius: 14px; padding: clamp(12px, 1.5vw, 20px) clamp(16px, 2vw, 28px);
+    font-size: clamp(18px, 2.2vw, 28px); font-weight: 700; margin-top: clamp(14px, 2vw, 24px); }
+  .grid { display: grid; gap: clamp(10px, 1.4vw, 18px); }
+  .muted { color: var(--muted); }
+  button, input, select { font: inherit; color: inherit; }
+
+  /* landing */
+  .items { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .item { text-align: left; cursor: pointer; transition: transform .08s; }
+  .item:hover { transform: translateY(-2px); }
+  .item.sel { border-color: var(--gold); border-width: 3px; background: #FFFDF6; }
+  .item input.name { width: 100%; border: 0; background: transparent; font-weight: 700; font-size: clamp(20px, 2.3vw, 30px); padding: 2px 0; }
+  .item .price { display: flex; align-items: baseline; gap: 2px; font-family: Arial, sans-serif; font-weight: 700; font-size: clamp(24px, 3vw, 40px); color: var(--gold); }
+  .item .price input { width: 5.2ch; border: 0; border-bottom: 2px dashed transparent; background: transparent; font-weight: 700; color: var(--gold); padding: 0; }
+  .item input:hover, .item input:focus { border-bottom-color: var(--border); outline: none; }
+
+  /* setup */
+  .two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: clamp(17px, 1.8vw, 23px); }
+  .row .n { font-family: Arial, sans-serif; font-weight: 700; color: var(--gold); font-size: 1.25em; width: 1.4em; }
+  .pill { border: 1.5px solid var(--border); background: #fff; border-radius: 999px; padding: 8px 16px; cursor: pointer; font-weight: 700; }
+  .pill.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .pill small { display: block; font-weight: 400; font-size: .68em; opacity: .85; }
+  select, input.amt, input.pr { border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 10px; background: #fff; }
+  input.amt { width: 6.5ch; } input.pr { width: 8ch; font-weight: 700; }
+  .big { font-family: Arial, sans-serif; font-weight: 700; font-size: clamp(30px, 4vw, 54px); line-height: 1.05; }
+
+  /* reveal columns */
+  .cols { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: stretch; }
+  .col { display: flex; flex-direction: column; min-height: clamp(230px, 34vw, 400px); }
+  .col.hidden { background: transparent; border-style: dashed; align-items: center; justify-content: center; color: var(--mist); font-size: clamp(40px, 6vw, 80px); font-weight: 700; }
+  .col.new { border-color: var(--gold); border-width: 3px; }
+  .col .total { margin: 10px 0 2px; }
+  .col .cap { color: var(--muted); font-size: clamp(13px, 1.3vw, 17px); }
+  .col table { width: 100%; border-collapse: collapse; margin-top: auto; font-size: clamp(15px, 1.65vw, 22px); }
+  .col td { padding: 5px 0; border-top: 1px solid #E4E8EF; }
+  .col td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
+  .col tr.int td:last-child { color: var(--gold); }
+  .note { font-size: clamp(12px, 1.15vw, 15px); color: var(--muted); margin-top: 6px; }
+
+  /* bills */
+  .bills { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .bill table { width: 100%; border-collapse: collapse; font-size: clamp(17px, 1.9vw, 25px); margin-top: 10px; }
+  .bill td { padding: 7px 0; border-top: 1px solid #E4E8EF; }
+  .bill td:last-child { text-align: right; font-weight: 700; }
+  .bill tr.due td { border-top: 2px solid var(--navy); font-size: 1.25em; font-weight: 700; }
+  .bill tr.sub2 td { border-top: 0; padding-top: 0; color: var(--muted); font-size: .86em; }
+  .bill tr.sub2 td:first-child { padding-left: 1.2em; }
+  .split { display: flex; height: clamp(20px, 2.4vw, 30px); border-radius: 8px; overflow: hidden; margin-top: 14px; }
+  .split div { display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: clamp(12px, 1.2vw, 16px); white-space: nowrap; overflow: hidden; }
+
+  svg { width: 100%; height: auto; max-height: calc(100vh - 290px); min-height: 220px; display: block; }
+  svg text { font-family: Calibri, "Segoe UI", Arial, sans-serif; fill: var(--navy); }
+
+  /* nav */
+  nav { position: sticky; bottom: 0; background: rgba(245,247,250,.96); border-top: 1px solid #DDE3EC;
+    display: flex; align-items: center; gap: 12px; padding: 10px clamp(16px, 4vw, 56px); }
+  nav .sp { flex: 1; text-align: center; color: var(--muted); font-size: 14px; }
+  nav button { border: 1.5px solid var(--navy); background: #fff; border-radius: 10px; padding: 9px 20px; font-weight: 700; cursor: pointer; font-size: 17px; }
+  nav button.primary { background: var(--navy); color: #fff; }
+  nav button:disabled { opacity: .35; cursor: default; }
+  nav a { color: var(--muted); font-size: 14px; cursor: pointer; text-decoration: underline; }
+  footer { color: var(--muted); font-size: 12px; padding: 4px clamp(16px, 4vw, 56px) 10px; }
+  @media (max-width: 900px) {
+    .cols { grid-template-columns: 1fr 1fr; }
+    .col { min-height: 0; } .col.hidden { min-height: 90px; }
+  }
+  @media (max-width: 600px) {
+    .cols { grid-template-columns: 1fr; }
+    .col.hidden { min-height: 60px; font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav>
+  <button id="back">&larr; Back</button>
+  <span class="sp"><span id="count"></span> &nbsp;·&nbsp; <a id="edit">change the setup</a> &nbsp;·&nbsp; <a id="restart">start over</a></span>
+  <button id="next" class="primary">Next &rarr;</button>
+</nav>
+<footer id="foot"></footer>
+
+<script>
+/* ------------------------------------------------------------------
+   EDIT HERE: the items the class votes on, and the card's terms.
+   Card terms are Capital One Quicksilver's published rates and fees,
+   read from capitalone.com on October 11, 2026.
+------------------------------------------------------------------- */
+var ITEMS = [
+  { name: "Item A", price: 2000 },
+  { name: "Item B", price: 2250 },
+  { name: "Item C", price: 2500 },
+  { name: "Item D", price: 2750 },
+  { name: "Item E", price: 3000 }
+];
+var CARD = {
+  name: "Capital One Quicksilver",
+  rates: [ { apr: 18.74, tag: "strongest credit" }, { apr: 24.74, tag: "middle" }, { apr: 28.74, tag: "weakest credit approved" } ],
+  rewards: 0.015,        // 1.5% cash back on purchases
+  minFloor: 25,          // minimum payment is the greater of $25 ...
+  minPct: 0.01,          // ... or 1% of the balance plus new interest
+  asOf: "October 11, 2026"
+};
+var DEFAULT_PLAN = [ { t: "full" }, { t: "fixed", amt: 150 }, { t: "fixed", amt: 100 }, { t: "min" } ];
+var COLORS = ["#4A6FA5", "#1B2A49", "#9AA8C0", "#C8972B"];
+
+/* ---------------------------- the math ---------------------------- */
+// Round to cents. The toFixed step removes binary floating-point noise first,
+// so an exact half cent rounds up the way it would on paper.
+function r2(x) { return Math.round(Number((x * 100).toFixed(6))) / 100; }
+
+// One payment plan, month by month. Bill 1 carries no interest (the grace period).
+// After that, interest is one month of the APR on whatever is still owed.
+function simulate(price, apr, plan) {
+  var rate = apr / 1200, bal = price, m = 0, interest = 0, rows = [], bumped = false;
+  while (bal > 0.004 && m < 1200) {
+    m++;
+    var i = m === 1 ? 0 : r2(bal * rate);
+    var stmt = r2(bal + i);
+    var minDue = stmt < CARD.minFloor ? stmt : Math.min(stmt, Math.max(CARD.minFloor, r2(CARD.minPct * stmt + i)));
+    var pay;
+    if (plan.t === "full") pay = stmt;
+    else if (plan.t === "min") pay = minDue;
+    else { pay = Math.max(plan.amt || 0, minDue); if ((plan.amt || 0) < minDue - 0.004) bumped = true; }
+    pay = Math.min(pay, stmt);
+    rows.push({ m: m, start: bal, interest: i, stmt: stmt, minDue: minDue, pay: pay, end: r2(stmt - pay) });
+    interest = r2(interest + i);
+    bal = r2(stmt - pay);
+  }
+  return { months: m, interest: interest, total: r2(price + interest), rows: rows, bumped: bumped };
+}
+
+/* ---------------------------- state ---------------------------- */
+var S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 };
+try { var saved = JSON.parse(localStorage.getItem("bus11cc") || "null"); if (saved && saved.items && saved.plan) S = saved; } catch (e) {}
+function save() { try { localStorage.setItem("bus11cc", JSON.stringify(S)); } catch (e) {} }
+
+function item() { return S.items[S.sel] || { name: "our purchase", price: 0 }; }
+function price() { return Math.max(0, Number(item().price) || 0); }
+function apr() { return CARD.rates[S.rate].apr; }
+function plans() { return S.plan.filter(function (p) { return p.t !== "none"; }); }
+function results() { return plans().map(function (p) { return simulate(price(), apr(), p); }); }
+
+function money(x, cents) {
+  return x.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+}
+function planName(p) { return p.t === "full" ? "Pay it all" : p.t === "min" ? "Minimum only" : money(p.amt || 0) + " a month"; }
+function timeText(m) {
+  if (m === 1) return "1 month";
+  if (m < 24) return m + " months";
+  var y = Math.floor(m / 12), mo = m % 12;
+  return y + (y === 1 ? " year" : " years") + (mo ? " " + mo + (mo === 1 ? " month" : " months") : "");
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+/* ---------------------------- steps ---------------------------- */
+function buildSteps() {
+  var st = [{ v: "landing" }, { v: "setup" }];
+  plans().forEach(function (p, k) {
+    if (p.t === "min") { st.push({ v: "bill", k: k, n: 1 }); st.push({ v: "bill", k: k, n: 2 }); }
+    st.push({ v: "reveal", k: k });
+  });
+  st.push({ v: "bars" }); st.push({ v: "lines" });
+  return st;
+}
+
+/* ---------------------------- views ---------------------------- */
+function vLanding() {
+  var h = '<h1>Let’s buy something expensive</h1><p class="sub">Vote as a class, then click the winner. Names and prices can be edited.</p><div class="grid items">';
+  S.items.forEach(function (it, i) {
+    h += '<div class="card item' + (i === S.sel ? " sel" : "") + '" data-pick="' + i + '">' +
+      '<input class="name" data-name="' + i + '" value="' + esc(it.name) + '" aria-label="Item name">' +
+      '<div class="price">$<input data-price="' + i + '" inputmode="numeric" value="' + (Number(it.price) || 0) + '" aria-label="Price"></div></div>';
+  });
+  h += '</div>';
+  h += '<div class="band">' + (S.sel < 0 ? "Pick one to put on the card." : "We’re buying " + esc(item().name) + " for " + money(price()) + ".") + '</div>';
+  return h;
+}
+
+function vSetup() {
+  var h = '<h1>It goes on our credit card</h1><p class="sub">' + esc(item().name) + ' on a ' + CARD.name + '.</p><div class="grid two">';
+  h += '<div class="card"><div class="label">The purchase</div><div class="row">' + esc(item().name) + ' &nbsp; $<input class="pr" id="prc" inputmode="numeric" value="' + price() + '"></div>' +
+    '<div class="label" style="margin-top:22px">Our interest rate</div><div class="row">';
+  CARD.rates.forEach(function (r, i) { h += '<button class="pill' + (i === S.rate ? " on" : "") + '" data-rate="' + i + '">' + r.apr.toFixed(2) + '%<small>' + r.tag + '</small></button>'; });
+  h += '</div><div class="note">Your credit decides which of the three you get.</div>' +
+    '<div class="label" style="margin-top:22px">Rewards</div><div class="row">' + (CARD.rewards * 100).toFixed(1) + '% cash back: ' + money(r2(price() * CARD.rewards), true) + ' on this purchase</div></div>';
+  h += '<div class="card"><div class="label">How could we pay it off?</div>';
+  S.plan.forEach(function (p, i) {
+    h += '<div class="row"><span class="n">' + (i + 1) + '</span><select data-type="' + i + '">' +
+      [["full", "Pay it all when the bill comes"], ["fixed", "Pay a set amount each month"], ["min", "Pay only the minimum"], ["none", "(not used)"]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (p.t === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select>' +
+      (p.t === "fixed" ? ' $<input class="amt" data-amt="' + i + '" inputmode="numeric" value="' + (p.amt || 0) + '">' : "") + '</div>';
+  });
+  h += '<div class="note" style="margin-top:14px">Minimum payment on this card: the greater of $25, or 1% of the balance plus that month’s interest.</div></div></div>';
+  return h;
+}
+
+function column(p, res, k, state) {
+  if (state === "hidden") return '<div class="card col hidden">?</div>';
+  var rew = r2(price() * CARD.rewards);
+  return '<div class="card col' + (state === "new" ? " new" : "") + '">' +
+    '<div class="label" style="color:' + COLORS[k % 4] + '">' + planName(p) + '</div>' +
+    '<div class="big total">' + money(res.total) + '</div><div class="cap">total paid for a ' + money(price()) + ' purchase</div>' +
+    '<table><tr><td>Price</td><td>' + money(price()) + '</td></tr>' +
+    '<tr class="int"><td>Interest</td><td>' + (res.interest ? "+ " : "") + money(res.interest) + '</td></tr>' +
+    '<tr><td>Time</td><td>' + timeText(res.months) + '</td></tr>' +
+    '<tr><td>Rewards</td><td>' + money(rew, true) + '</td></tr></table>' +
+    (res.bumped ? '<div class="note">Some months the card required more than ' + money(p.amt || 0) + '.</div>' : "") + '</div>';
+}
+
+function vReveal(k) {
+  var ps = plans(), rs = results(), p = ps[k], res = rs[k];
+  var h = '<h1>What did ' + esc(item().name) + ' really cost?</h1><p class="sub">' + money(price()) + ' on the card at ' + apr().toFixed(2) + '%.</p>';
+  h += '<div class="grid cols" style="--n:' + ps.length + '">';
+  ps.forEach(function (q, i) { h += column(q, rs[i], i, i < k ? "shown" : i === k ? "new" : "hidden"); });
+  h += '</div>';
+  var rew = r2(price() * CARD.rewards), msg;
+  if (p.t === "full") msg = "No interest. And " + money(rew, true) + " back in rewards.";
+  else if (res.interest > price()) msg = "The interest (" + money(res.interest) + ") is more than the purchase itself.";
+  else msg = "We paid " + money(res.interest) + " in interest to spread it over " + timeText(res.months) + ". Rewards earned: still " + money(rew, true) + ".";
+  return h + '<div class="band">' + msg + '</div>';
+}
+
+function billCard(row, n, showSplit) {
+  var principal = r2(row.pay - row.interest);
+  var h = '<div class="card bill"><div class="label">Bill ' + n + '</div><table>' +
+    '<tr><td>' + (n === 1 ? "Purchase" : "Still owed from last month") + '</td><td>' + money(row.start, true) + '</td></tr>' +
+    '<tr><td>Interest this month</td><td>' + money(row.interest, true) + '</td></tr>' +
+    '<tr class="due"><td>Minimum payment due</td><td>' + money(row.minDue, true) + '</td></tr>';
+  if (showSplit) {
+    h += '<tr class="sub2"><td>goes to interest</td><td>' + money(row.interest, true) + '</td></tr>' +
+      '<tr class="sub2"><td>comes off what we owe</td><td>' + money(principal, true) + '</td></tr></table>';
+    var pi = row.pay ? Math.round(row.interest / row.pay * 100) : 0;
+    h += '<div class="split"><div style="width:' + pi + '%;background:var(--gold)">interest</div><div style="width:' + (100 - pi) + '%;background:var(--navy)">debt</div></div>';
+  } else h += '</table>';
+  return h + '</div>';
+}
+
+function vBill(k, n) {
+  var res = results()[k], b1 = res.rows[0], b2 = res.rows[1] || res.rows[0];
+  var h = '<h1>What if we only pay the minimum?</h1><p class="sub">' + esc(item().name) + ', ' + money(price()) + ', at ' + apr().toFixed(2) + '%.</p><div class="grid bills">';
+  h += billCard(b1, 1, false);
+  h += n === 2 ? billCard(b2, 2, true) : '<div class="card col hidden">?</div>';
+  h += '</div>';
+  var msg = n === 1 ? "Only " + money(b1.minDue, true) + " due on a " + money(price()) + " purchase. Manageable, right?"
+    : money(b2.interest, true) + " of the " + money(b2.minDue, true) + " is interest. Only " + money(r2(b2.pay - b2.interest), true) + " comes off what we owe.";
+  return h + '<div class="band">' + msg + '</div>';
+}
+
+function vBars() {
+  var ps = plans(), rs = results(), W = 1000, H = 430, top = 46, base = 350, n = ps.length;
+  var max = Math.max.apply(null, rs.map(function (r) { return r.total; })) || 1, slot = W / n, bw = Math.min(170, slot * 0.56);
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total paid under each plan">';
+  rs.forEach(function (r, i) {
+    var x = slot * i + (slot - bw) / 2, hp = (base - top) * price() / max, hi = (base - top) * r.interest / max;
+    s += '<rect x="' + x + '" y="' + (base - hp) + '" width="' + bw + '" height="' + hp + '" fill="#1B2A49" rx="4"/>';
+    if (hi > 0) s += '<rect x="' + x + '" y="' + (base - hp - hi) + '" width="' + bw + '" height="' + hi + '" fill="#C8972B" rx="4"/>';
+    if (hi > 26) s += '<text x="' + (x + bw / 2) + '" y="' + (base - hp - hi / 2 + 6) + '" text-anchor="middle" font-size="19" font-weight="700" style="fill:#fff">' + money(r.interest) + '</text>';
+    if (hp > 26) s += '<text x="' + (x + bw / 2) + '" y="' + (base - hp / 2 + 6) + '" text-anchor="middle" font-size="19" font-weight="700" style="fill:#fff">' + money(price()) + '</text>';
+    s += '<text x="' + (x + bw / 2) + '" y="' + (base - hp - hi - 12) + '" text-anchor="middle" font-size="27" font-weight="700" font-family="Arial">' + money(r.total) + '</text>';
+    s += '<text x="' + (x + bw / 2) + '" y="' + (base + 30) + '" text-anchor="middle" font-size="22" font-weight="700">' + planName(ps[i]) + '</text>';
+    s += '<text x="' + (x + bw / 2) + '" y="' + (base + 56) + '" text-anchor="middle" font-size="19" style="fill:#6B7280">' + timeText(r.months) + '</text>';
+  });
+  s += '<line x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '" stroke="#8A9AB5" stroke-width="1.5"/></svg>';
+  var words = ["", "one price", "two prices", "three prices", "four prices"];
+  return '<h1>Same purchase, ' + (words[n] || n + " prices") + '</h1><p class="sub"><span style="color:var(--navy);font-weight:700">■ price</span> &nbsp; <span style="color:var(--gold);font-weight:700">■ interest</span></p><div class="card">' + s + '</div>';
+}
+
+function vLines() {
+  var ps = plans(), rs = results(), W = 1000, H = 430, L = 86, R = 24, T = 20, B = 372;
+  var maxM = Math.max.apply(null, rs.map(function (r) { return r.months; })), maxB = price() || 1;
+  var years = maxM > 36, X = function (m) { return L + (W - L - R) * m / maxM; }, Y = function (b) { return B - (B - T) * b / maxB; };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Balance owed over time under each plan">';
+  for (var g = 0; g <= 4; g++) { var v = maxB * g / 4;
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#E4E8EF"/><text x="' + (L - 10) + '" y="' + (Y(v) + 6) + '" text-anchor="end" font-size="17" style="fill:#6B7280">' + money(v) + '</text>'; }
+  var stepM = years ? 12 * Math.max(1, Math.ceil(maxM / 12 / 8)) : Math.max(1, Math.ceil(maxM / 8));
+  for (var m = 0; m <= maxM; m += stepM) s += '<text x="' + X(m) + '" y="' + (B + 26) + '" text-anchor="middle" font-size="17" style="fill:#6B7280">' + (years ? m / 12 : m) + '</text>';
+  s += '<text x="' + ((L + W - R) / 2) + '" y="' + (B + 52) + '" text-anchor="middle" font-size="18" style="fill:#6B7280">' + (years ? "years" : "months") + ' since the purchase</text>';
+  rs.forEach(function (r, i) {
+    var pts = [X(0) + "," + Y(price())].concat(r.rows.map(function (row) { return X(row.m) + "," + Y(row.end); }));
+    s += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + COLORS[i % 4] + '" stroke-width="' + (ps[i].t === "min" ? 5 : 3.5) + '" stroke-linejoin="round"/>';
+  });
+  s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + B + '" y2="' + B + '" stroke="#8A9AB5" stroke-width="1.5"/></svg>';
+  var legend = ps.map(function (p, i) { return '<span style="white-space:nowrap"><span style="color:' + COLORS[i % 4] + ';font-weight:700">━━ ' + planName(p) + '</span> <span class="muted">' + timeText(rs[i].months) + '</span></span>'; }).join(" &nbsp;&nbsp; ");
+  return '<h1>How long were we paying?</h1><p class="sub">' + legend + '</p><div class="card">' + s + '</div>';
+}
+
+/* ---------------------------- render + events ---------------------------- */
+var app = document.getElementById("app"), steps = [];
+function render() {
+  steps = buildSteps();
+  if (S.step >= steps.length) S.step = steps.length - 1;
+  if (S.step > 0 && S.sel < 0) S.step = 0;
+  var st = steps[S.step];
+  app.innerHTML = st.v === "landing" ? vLanding() : st.v === "setup" ? vSetup() : st.v === "bill" ? vBill(st.k, st.n) : st.v === "reveal" ? vReveal(st.k) : st.v === "bars" ? vBars() : vLines();
+  document.getElementById("back").disabled = S.step === 0;
+  document.getElementById("next").disabled = S.step === steps.length - 1 || S.sel < 0;
+  document.getElementById("count").textContent = (S.step + 1) + " of " + steps.length;
+  document.getElementById("foot").textContent = CARD.name + " terms as published by Capital One, " + CARD.asOf + ". Assumes the introductory rate has ended, no other purchases, no late payments, and interest figured monthly. A real statement uses daily balances, so actual amounts differ slightly.";
+  save();
+}
+function go(d) { S.step = Math.max(0, Math.min(steps.length - 1, S.step + d)); render(); window.scrollTo(0, 0); }
+
+document.getElementById("back").onclick = function () { go(-1); };
+document.getElementById("next").onclick = function () { go(1); };
+document.getElementById("edit").onclick = function () { if (S.sel >= 0) { S.step = 1; render(); } };
+document.getElementById("restart").onclick = function () {
+  S = { items: JSON.parse(JSON.stringify(ITEMS)), sel: -1, rate: 1, plan: JSON.parse(JSON.stringify(DEFAULT_PLAN)), step: 0 }; render(); };
+
+app.addEventListener("click", function (e) {
+  var t = e.target, pick = t.closest("[data-pick]"), rate = t.closest("[data-rate]");
+  if (pick && t.tagName !== "INPUT") { S.sel = Number(pick.getAttribute("data-pick")); render(); }
+  if (rate) { S.rate = Number(rate.getAttribute("data-rate")); render(); }
+});
+app.addEventListener("change", function (e) {
+  var t = e.target, num = function () { return Math.max(0, Number(String(t.value).replace(/[^0-9.]/g, "")) || 0); };
+  if (t.hasAttribute("data-name")) { S.items[Number(t.getAttribute("data-name"))].name = t.value || "Item"; }
+  else if (t.hasAttribute("data-price")) { var i = Number(t.getAttribute("data-price")); S.items[i].price = num(); S.sel = i; }
+  else if (t.id === "prc") { S.items[S.sel].price = num(); }
+  else if (t.hasAttribute("data-type")) { var p = S.plan[Number(t.getAttribute("data-type"))]; p.t = t.value; if (p.t === "fixed" && !p.amt) p.amt = 100; }
+  else if (t.hasAttribute("data-amt")) { S.plan[Number(t.getAttribute("data-amt"))].amt = num(); }
+  render();
+});
+document.addEventListener("keydown", function (e) {
+  var tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "select") { if (e.key === "Enter") e.target.blur(); return; }
+  if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); if (!document.getElementById("next").disabled) go(1); }
+  if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(-1); }
+});
+render();
+</script>
+</body>
+</html>
