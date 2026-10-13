@@ -52,8 +52,8 @@
     <table>
       <tr><td>Annual fee</td><td>$0</td></tr>
       <tr><td>Rewards</td><td>1.5% cash back on every purchase</td></tr>
-      <tr><td>Payment due</td><td>At least 25 days after each bill</td></tr>
-      <tr><td>Interest</td><td>None on purchases if you pay the full balance by the due date each month</td></tr>
+      <tr><td>Payment due</td><td>25 days after the billing cycle ends</td></tr>
+      <tr><td>Interest</td><td>None on purchases if paid in full by the due date. Otherwise <span id="apr2"></span> APR on the unpaid balance.</td></tr>
       <tr><td>Minimum payment</td><td>The greater of $25, or 1% of your balance plus that month’s interest</td></tr>
       <tr><td>Late fee</td><td>Up to $40</td></tr>
     </table>
@@ -75,6 +75,7 @@ if (m) pick = Number(m[1]) - 1;
 if (pick === null) { try { var s = localStorage.getItem(KEY); if (s !== null && RATES[Number(s)]) pick = Number(s); } catch (e) {} }
 if (pick === null) { pick = Math.floor(Math.random() * RATES.length); try { localStorage.setItem(KEY, String(pick)); } catch (e) {} }
 document.getElementById("apr").textContent = RATES[pick].toFixed(2) + "%";
+document.getElementById("apr2").textContent = RATES[pick].toFixed(2) + "%";
 </script>
 </body>
 </html>
