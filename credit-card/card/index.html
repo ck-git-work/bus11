@@ -27,6 +27,9 @@
   td:first-child { color: var(--muted); width: 42%; padding-right: 10px; }
   td:last-child { font-weight: 700; }
   .band { background: var(--tint); border-radius: 14px; padding: 14px 18px; font-size: 20px; font-weight: 700; margin-top: 16px; }
+  button.more { display: block; width: 100%; margin-top: 16px; border: 0; border-radius: 14px; background: var(--navy); color: #fff;
+    font: inherit; font-size: 20px; font-weight: 700; padding: 16px 14px; cursor: pointer; }
+  #history { display: none; }
   footer { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: 12px; padding: 14px 16px 22px; line-height: 1.35; }
 </style>
 </head>
@@ -60,14 +63,36 @@
   </div>
 
   <div class="band">Compare your offer with the people around you. What do you notice?</div>
+
+  <button class="more" id="more">See Matt’s credit history</button>
+  <div id="history">
+    <div class="card">
+      <div class="label">Matt’s credit history</div>
+      <table>
+        <tr><td>Payments</td><td id="h0"></td></tr>
+        <tr><td>Card balances</td><td id="h1"></td></tr>
+        <tr><td>Oldest account</td><td id="h2"></td></tr>
+        <tr><td>Applications in the past year</td><td id="h3"></td></tr>
+        <tr><td>Types of credit</td><td id="h4"></td></tr>
+      </table>
+    </div>
+    <div class="band">Compare histories. Which version of Matt looks like the safest bet to a lender, and why?</div>
+  </div>
 </main>
-<footer>BUS 11 class simulation. This is not a real offer and is not affiliated with Capital One. Terms are based on the Capital One Quicksilver terms published October 11, 2026; the introductory rate is left out.</footer>
+<footer>BUS 11 class simulation. This is not a real offer and is not affiliated with Capital One. Terms are based on the Capital One Quicksilver terms published October 11, 2026; the introductory rate is left out. Matt’s credit history is made up for this class.</footer>
 
 <script>
 /* Each phone is given one of the card's three published rates at random,
    and keeps it if the page is reloaded. Adding ?v=1, ?v=2 or ?v=3 to the
    address shows a chosen version (for the instructor). */
 var RATES = [18.74, 24.74, 28.74];
+// One made-up credit history for each rate, in the same order as RATES. The five lines follow
+// the five parts of a FICO score: payment history, amounts owed, length of history, new credit, credit mix.
+var HISTORY = [
+  ["On time every month, never late", "$600 of $12,000 in limits (5%)", "9 years", "None", "Two cards, a student loan and a paid-off car loan"],
+  ["One payment 30 days late, four years ago", "$2,700 of $9,000 in limits (30%)", "5 years", "1", "Two cards and a car loan"],
+  ["One payment 30 days late, about 18 months ago", "$3,600 of $6,000 in limits (60%)", "3 years", "3", "Credit cards only"]
+];
 var KEY = "bus11matt_rate";
 var pick = null;
 var m = /[?&]v=([123])/.exec(location.search);
@@ -76,6 +101,12 @@ if (pick === null) { try { var s = localStorage.getItem(KEY); if (s !== null && 
 if (pick === null) { pick = Math.floor(Math.random() * RATES.length); try { localStorage.setItem(KEY, String(pick)); } catch (e) {} }
 document.getElementById("apr").textContent = RATES[pick].toFixed(2) + "%";
 document.getElementById("apr2").textContent = RATES[pick].toFixed(2) + "%";
+for (var h = 0; h < 5; h++) document.getElementById("h" + h).textContent = HISTORY[pick][h];
+document.getElementById("more").onclick = function () {
+  document.getElementById("history").style.display = "block";
+  this.style.display = "none";
+  document.getElementById("history").scrollIntoView({ behavior: "smooth" });
+};
 </script>
 </body>
 </html>
