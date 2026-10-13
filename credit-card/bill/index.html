@@ -28,6 +28,18 @@
     font: inherit; font-size: 22px; font-weight: 700; padding: 18px 14px; cursor: pointer; }
   button.pay small { display: block; font-weight: 400; font-size: 15px; opacity: .85; margin-top: 2px; }
   .band { background: var(--tint); border-radius: 14px; padding: 14px 18px; font-size: 20px; font-weight: 700; margin-top: 16px; }
+  button.more { display: block; width: 100%; margin-top: 16px; border: 0; border-radius: 14px; background: var(--navy); color: #fff;
+    font: inherit; font-size: 20px; font-weight: 700; padding: 16px 14px; cursor: pointer; }
+  .b { padding: 12px 0; border-top: 1px solid #E4E8EF; }
+  .b:first-of-type { border-top: 0; }
+  .b .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 19px; font-weight: 700; }
+  .b .bar { display: flex; height: 16px; border-radius: 6px; overflow: hidden; margin: 7px 0 6px; background: #E4E8EF; }
+  .b .bar .i { background: var(--gold); } .b .bar .d { background: var(--navy); }
+  .b .parts { display: flex; justify-content: space-between; font-size: 16px; }
+  .b .parts .gi { color: #8A6410; font-weight: 700; } .b .parts .gd { font-weight: 700; }
+  .b .owed { font-size: 16px; color: var(--muted); margin-top: 3px; }
+  .key { font-size: 15px; color: var(--muted); margin-top: 8px; }
+  .key b.gi { color: #8A6410; } .key b.gd { color: var(--navy); }
   a.back { display: inline-block; margin-top: 14px; color: var(--muted); font-size: 15px; text-decoration: underline; cursor: pointer; }
   footer { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: 12px; padding: 14px 16px 22px; line-height: 1.35; }
 </style>
@@ -82,7 +94,7 @@ if (q) { pick = Number(q[1]) - 1; forced = true; }
 if (pick === null) { try { var s = localStorage.getItem(KEY); if (s !== null && PLANS[Number(s)]) pick = Number(s); } catch (e) {} }
 if (pick === null) { pick = Math.floor(Math.random() * PLANS.length); try { localStorage.setItem(KEY, String(pick)); } catch (e) {} }
 var plan = PLANS[pick], res = simulate(PRICE, APR, plan), b1 = res.rows[0], rewards = r2(PRICE * REWARDS);
-var paid = false;
+var paid = false, showBills = false;
 if (!forced) { try { paid = localStorage.getItem(PAID) === "1"; } catch (e) {} }
 
 var app = document.getElementById("app");
@@ -116,16 +128,39 @@ function vResult() {
   if (plan.t === "full") h += '<div class="note">Paid in full on the first bill, so the card never charged interest.</div>';
   if (plan.t === "min" && res.rows[1]) { var b2 = res.rows[1];
     h += '<div class="note">On bill 2 the minimum was ' + money(b2.minDue, true) + '. Of that, ' + money(b2.interest, true) + ' was interest and only ' + money(r2(b2.pay - b2.interest), true) + ' came off what Matt owed.</div>'; }
-  h += '<div class="band">Be ready to tell the class: what it cost, the interest, how long it took, and the cash back.</div>' +
-    '<a class="back" id="again">see the bill again</a>';
+  h += '<div class="band">Be ready to tell the class: what it cost, the interest, how long it took, and the cash back.</div>';
+  h += showBills ? vFive() : '<button class="more" id="five">See the first five bills</button>';
+  h += '<a class="back" id="again">see the bill again</a>';
+  return h;
+}
+
+// The first five bills for this version of Matt. Each payment is split into the part that was
+// interest and the part that came off what he owed. A version that is already paid off shows zeros.
+function vFive() {
+  var h = '<div class="card"><div class="label">The first five bills</div>' +
+    '<div class="key">Each payment splits into <b class="gi">interest</b> and what <b class="gd">comes off the debt</b>.</div>';
+  for (var k = 0; k < 5; k++) {
+    var row = res.rows[k] || { interest: 0, pay: 0, start: 0 };
+    var off = r2(row.pay - row.interest), left = r2(row.start + row.interest - row.pay);
+    var pi = row.pay ? row.interest / row.pay * 100 : 0;
+    h += '<div class="b"><div class="top"><span>Bill ' + (k + 1) + '</span><span>Paid ' + money(row.pay, true) + '</span></div>' +
+      '<div class="bar">' + (row.pay ? '<div class="i" style="width:' + pi.toFixed(1) + '%"></div><div class="d" style="width:' + (100 - pi).toFixed(1) + '%"></div>' : '') + '</div>' +
+      '<div class="parts"><span class="gi">Interest ' + money(row.interest, true) + '</span><span class="gd">Off the debt ' + money(off, true) + '</span></div>' +
+      '<div class="owed">Still owed after this bill: ' + money(left, true) + '</div></div>';
+  }
+  var last = res.rows[Math.min(4, res.rows.length - 1)], paidSoFar = 0;
+  for (var j = 0; j < Math.min(5, res.rows.length); j++) paidSoFar = r2(paidSoFar + res.rows[j].pay);
+  var leftNow = res.rows.length <= 5 && res.months <= 5 ? 0 : r2(last.start + last.interest - last.pay);
+  h += '</div><div class="band">After five bills: ' + money(paidSoFar, true) + ' paid, ' + money(leftNow, true) + ' still owed.</div>';
   return h;
 }
 
 function render() {
   app.innerHTML = paid ? vResult() : vBill();
-  var p = document.getElementById("pay"), a = document.getElementById("again");
+  var p = document.getElementById("pay"), a = document.getElementById("again"), f = document.getElementById("five");
+  if (f) f.onclick = function () { showBills = true; render(); var c = app.querySelector(".card:last-of-type"); if (c) c.scrollIntoView({ behavior: "smooth" }); };
   if (p) p.onclick = function () { paid = true; if (!forced) { try { localStorage.setItem(PAID, "1"); } catch (e) {} } render(); window.scrollTo(0, 0); };
-  if (a) a.onclick = function () { paid = false; if (!forced) { try { localStorage.removeItem(PAID); } catch (e) {} } render(); window.scrollTo(0, 0); };
+  if (a) a.onclick = function () { paid = false; showBills = false; if (!forced) { try { localStorage.removeItem(PAID); } catch (e) {} } render(); window.scrollTo(0, 0); };
 }
 render();
 </script>
