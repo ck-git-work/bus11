@@ -100,10 +100,10 @@ if (!forced) { try { paid = localStorage.getItem(PAID) === "1"; } catch (e) {} }
 var app = document.getElementById("app");
 
 function vBill() {
-  var btn = plan.t === "full" ? "Pay it all: " + money(PRICE) + "<small>the full balance</small>"
-    : plan.t === "min" ? "Pay the minimum: " + money(b1.minDue, true) + "<small>and the minimum on every bill after this</small>"
-    : "Pay " + money(plan.amt) + "<small>and " + money(plan.amt) + " on every bill after this</small>";
-  return '<h1>Your first bill is here, Matt.</h1><p class="sub">You put an ' + ITEM + ' on your card.</p>' +
+  var btn = plan.t === "full" ? "All of it: " + money(PRICE) + "<small>the full balance</small>"
+    : plan.t === "min" ? "The minimum: " + money(b1.minDue, true) + "<small>and the minimum on every bill after this</small>"
+    : money(plan.amt) + " a month<small>on this bill and every bill after it</small>";
+  return '<h1 style="margin-bottom:14px">Your first bill is here, Matt.</h1>' +
     '<div class="card"><div class="label">Bill 1</div><table>' +
     '<tr><td>' + ITEM + ', with tax</td><td>' + money(PRICE, true) + '</td></tr>' +
     '<tr><td>Interest this month</td><td>' + money(0, true) + '</td></tr>' +
@@ -111,7 +111,7 @@ function vBill() {
     '<tr><td>Minimum payment due</td><td>' + money(b1.minDue, true) + '</td></tr>' +
     '<tr><td>Your rate</td><td>' + APR.toFixed(2) + '% APR</td></tr>' +
     '<tr><td>Cash back earned</td><td>' + money(rewards, true) + '</td></tr></table></div>' +
-    '<div class="note">This version of Matt has decided how he pays his card.</div>' +
+    '<div class="note" style="font-size:17px">This version of Matt has decided how he pays his card. He has elected to pay:</div>' +
     '<button class="pay" id="pay">' + btn + '</button>';
 }
 
