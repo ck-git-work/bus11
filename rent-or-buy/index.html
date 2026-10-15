@@ -89,7 +89,7 @@
     <ul>
       <li>Price $700,000, 20% down. Matt has $154,000 (down payment plus closing costs).</li>
       <li>Mortgage: 7.3% fixed for 30 years ($3,839 a month).</li>
-      <li>Owner’s other costs: property tax $745, HOA $545, insurance $50 a month, growing 2.5% a year; maintenance 1% of the home’s value a year.</li>
+      <li>Owner’s other costs: property tax $745, HOA $545, insurance $70 a month, growing 2.5% a year; maintenance 1% of the home’s value a year.</li>
       <li>Rent: $3,677 a month to start for a similar unit, growing 3% a year.</li>
       <li>“The difference” = the owner’s monthly cost minus rent. It starts near $2,100 and shrinks as rent rises. When rent passes the owner’s cost, both renters pay the extra from their investments.</li>
       <li>The switch adds the mortgage interest deduction for Matt as a buyer (24% federal bracket plus California, itemizing). He uses the tax savings, about $15,700 the first year, to pay extra on the loan, which pays it off in about year 17; after that he invests the payment he no longer makes. Renters get no deduction.</li>
@@ -105,7 +105,7 @@ function run(g, ret) {
   let save = START, spend = START;
   for (let k = 0; k < N; k++) {
     const yr = Math.floor(k / 12);
-    const owner = PMT + 1340 * Math.pow(1.025, yr) + PRICE * Math.pow(1 + g, k / 12) * 0.01 / 12;
+    const owner = PMT + 1360 * Math.pow(1.025, yr) + PRICE * Math.pow(1 + g, k / 12) * 0.01 / 12;
     const rent = 3677 * Math.pow(1.03, yr);
     const d = owner - rent;
     save = save * (1 + ret / 12) + d;
