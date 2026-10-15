@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>BUS 11 · Matt's loft: rent or buy?</title>
+<title>BUS 11 · Matt's Loft: Rent vs Buy?</title>
 <style>
   :root { --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #6B7280; --bg: #F5F7FA; --border: #8A9AB5; --tint: #F6EFD9; --gray: #9AA3AF; }
   * { box-sizing: border-box; }
@@ -42,7 +42,7 @@
 </head>
 <body>
 <main>
-  <h1>Matt’s loft: rent or buy?</h1>
+  <h1>Matt’s Loft: Rent vs Buy?</h1>
   <p class="sub">A $700,000 loft. $154,000 saved. Where is each Matt after 30 years?</p>
 
   <div class="card">
@@ -67,12 +67,12 @@
     <div class="label">After 30 years</div>
     <div class="row">
       <div class="name"><span>Buy the loft<span class="win" id="w0">MOST</span></span><span class="amt" id="a0"></span></div>
-      <div class="how" id="buyHow">The home, paid off. The saving is forced.</div>
+      <div class="how" id="buyHow">The home value.</div>
       <div class="track"><div class="bar" id="b0" style="background:var(--navy)"></div></div>
     </div>
     <div class="row">
       <div class="name"><span>Rent and save the difference<span class="win" id="w1">MOST</span></span><span class="amt" id="a1"></span></div>
-      <div class="how">Invests the $154,000, plus what’s left over each month. The saving is a choice.</div>
+      <div class="how">Invests the $154,000, plus what’s left over each month.</div>
       <div class="track"><div class="bar" id="b1" style="background:var(--gold)"></div></div>
     </div>
     <div class="row">
@@ -85,13 +85,13 @@
   <div class="band" id="band"></div>
 
   <div class="card">
-    <div class="label">What stays the same</div>
+    <div class="label">Assumptions – what stays the same</div>
     <ul>
       <li>Price $700,000, 20% down. Matt has $154,000 (down payment plus closing costs).</li>
       <li>Mortgage: 7.3% fixed for 30 years ($3,839 a month).</li>
       <li>Owner’s other costs: property tax $745, HOA $545, insurance $70 a month, growing 2.5% a year; maintenance 1% of the home’s value a year.</li>
       <li>Rent: $3,677 a month to start for a similar unit, growing 3% a year.</li>
-      <li>“The difference” = the owner’s monthly cost minus rent. It starts near $2,100 and shrinks as rent rises. When rent passes the owner’s cost, both renters pay the extra from their investments.</li>
+      <li>The renter invests what an owner would spend minus the rent. It starts near $2,100 and shrinks as rent rises over time. When rent passes the owner’s cost, both renters pay the extra rent from their investments.</li>
       <li>The switch adds the mortgage interest deduction for Matt as a buyer (24% federal bracket plus California, itemizing). He uses the tax savings, about $15,700 the first year, to pay extra on the loan, which pays it off in about year 17; after that he invests the payment he no longer makes. Renters get no deduction.</li>
       <li>Ignores taxes on investment gains and the cost of selling the home.</li>
     </ul>
@@ -137,8 +137,8 @@ function draw() {
   const g = +$("g").value / 100, r = +$("r").value / 100;
   $("gOut").textContent = $("g").value + "%"; $("rOut").textContent = $("r").value + "%";
   const v = run(g, r);
-  if ($("tax").checked) { const d = buyWithDeduction(g, r); v[0] = d.total; $("buyHow").textContent = "The home, paid off, plus his tax savings: they pay the loan off in about year " + Math.round(d.payoff) + ", then the freed-up payment is invested."; }
-  else $("buyHow").textContent = "The home, paid off. The saving is forced.";
+  if ($("tax").checked) { const d = buyWithDeduction(g, r); v[0] = d.total; $("buyHow").textContent = "The home value plus his tax savings: Matt pays the loan off in about year " + Math.round(d.payoff) + ", then the freed-up payment is invested."; }
+  else $("buyHow").textContent = "The home value.";
   const top = Math.max(...v, 1);
   const best = v.indexOf(Math.max(...v));
   v.forEach((x, i) => { $("a" + i).textContent = money(x); $("b" + i).style.width = Math.max(0, x / top * 100) + "%"; $("w" + i).style.display = i === best ? "inline-block" : "none"; });
