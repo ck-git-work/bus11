@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BUS 11 · Matt's loft: rent or buy?</title>
+<style>
+  :root { --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #6B7280; --bg: #F5F7FA; --border: #8A9AB5; --tint: #F6EFD9; --gray: #9AA3AF; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--navy); font-family: Calibri, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 620px; margin: 0 auto; padding: 20px 16px 8px; }
+  h1 { font-family: Arial, Helvetica, sans-serif; font-size: 28px; line-height: 1.15; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0 0 14px; }
+  .label { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .card { background: #fff; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-top: 14px; }
+  .slider { margin: 10px 0 4px; }
+  .slider .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; }
+  .slider .val { font-family: Arial, sans-serif; font-weight: 700; font-size: 26px; color: var(--navy); }
+  input[type=range] { width: 100%; accent-color: var(--navy); height: 28px; }
+  .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-top: -2px; }
+  .row { margin-top: 14px; }
+  .row .name { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; font-weight: 700; }
+  .row .name .amt { font-family: Arial, sans-serif; font-size: 22px; white-space: nowrap; padding-left: 8px; }
+  .row .how { color: var(--muted); font-size: 15px; margin: 1px 0 5px; }
+  .track { background: #EEF1F5; border-radius: 6px; height: 26px; overflow: hidden; }
+  .bar { height: 100%; border-radius: 6px; transition: width .25s ease; }
+  .win { display: inline-block; margin-left: 8px; font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--navy); background: var(--tint); border-radius: 8px; padding: 2px 8px; vertical-align: middle; }
+  .band { background: var(--tint); border-radius: 14px; padding: 14px 18px; font-size: 19px; font-weight: 700; margin-top: 14px; }
+  button.reset { margin-top: 12px; border: 1.5px solid var(--border); background: #fff; color: var(--navy); border-radius: 10px; font: inherit; font-size: 16px; padding: 8px 14px; cursor: pointer; }
+  ul { margin: 6px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.45; }
+  footer { max-width: 620px; margin: 0 auto; color: var(--muted); font-size: 12px; padding: 14px 16px 22px; line-height: 1.35; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Matt’s loft: rent or buy?</h1>
+  <p class="sub">A $700,000 loft. $154,000 saved. Where is each Matt after 30 years?</p>
+
+  <div class="card">
+    <div class="label">Your assumptions</div>
+    <div class="slider">
+      <div class="top"><span>Home prices grow each year</span><span class="val" id="gOut"></span></div>
+      <input type="range" id="g" min="0" max="7" step="0.5" value="3" aria-label="Home price growth per year">
+      <div class="ends"><span>0%</span><span>7%</span></div>
+    </div>
+    <div class="slider">
+      <div class="top"><span>Investments earn each year</span><span class="val" id="rOut"></span></div>
+      <input type="range" id="r" min="2" max="10" step="0.5" value="6" aria-label="Investment return per year">
+      <div class="ends"><span>2%</span><span>10%</span></div>
+    </div>
+    <button class="reset" id="reset">Back to 3% and 6%</button>
+  </div>
+
+  <div class="card">
+    <div class="label">After 30 years</div>
+    <div class="row">
+      <div class="name"><span>Buy the loft<span class="win" id="w0">MOST</span></span><span class="amt" id="a0"></span></div>
+      <div class="how">The home, paid off. The saving is forced.</div>
+      <div class="track"><div class="bar" id="b0" style="background:var(--navy)"></div></div>
+    </div>
+    <div class="row">
+      <div class="name"><span>Rent and save the difference<span class="win" id="w1">MOST</span></span><span class="amt" id="a1"></span></div>
+      <div class="how">Invests the $154,000, plus what’s left over each month. The saving is a choice.</div>
+      <div class="track"><div class="bar" id="b1" style="background:var(--gold)"></div></div>
+    </div>
+    <div class="row">
+      <div class="name"><span>Rent and spend the difference<span class="win" id="w2">MOST</span></span><span class="amt" id="a2"></span></div>
+      <div class="how">Invests the $154,000, then spends what’s left over each month.</div>
+      <div class="track"><div class="bar" id="b2" style="background:var(--gray)"></div></div>
+    </div>
+  </div>
+
+  <div class="band" id="band"></div>
+
+  <div class="card">
+    <div class="label">What stays the same</div>
+    <ul>
+      <li>Price $700,000, 20% down. Matt has $154,000 (down payment plus closing costs).</li>
+      <li>Mortgage: 7.3% fixed for 30 years ($3,839 a month).</li>
+      <li>Owner’s other costs: property tax $745, HOA $545, insurance $50 a month, growing 2.5% a year; maintenance 1% of the home’s value a year.</li>
+      <li>Rent: $3,677 a month to start for a similar unit, growing 3% a year.</li>
+      <li>“The difference” = the owner’s monthly cost minus rent. It starts near $2,100 and shrinks as rent rises. When rent passes the owner’s cost, both renters pay the extra from their investments.</li>
+      <li>Ignores taxes on investment gains, the mortgage interest deduction and the cost of selling the home.</li>
+    </ul>
+  </div>
+</main>
+<footer>BUS 11 · Introduction to Personal Finance · De Anza College. Illustrative numbers for class, not financial advice. Based on a real San Jose listing, October 2026.</footer>
+<script>
+const PRICE = 700000, LOAN = 560000, START = 154000, RATE = 0.073, N = 360;
+const PMT = LOAN * (RATE / 12) / (1 - Math.pow(1 + RATE / 12, -N));
+function run(g, ret) {
+  let save = START, spend = START;
+  for (let k = 0; k < N; k++) {
+    const yr = Math.floor(k / 12);
+    const owner = PMT + 1340 * Math.pow(1.025, yr) + PRICE * Math.pow(1 + g, k / 12) * 0.01 / 12;
+    const rent = 3677 * Math.pow(1.03, yr);
+    const d = owner - rent;
+    save = save * (1 + ret / 12) + d;
+    spend = spend * (1 + ret / 12) + Math.min(0, d);
+  }
+  return [PRICE * Math.pow(1 + g, 30), save, spend];
+}
+const $ = (id) => document.getElementById(id);
+const money = (v) => (v < 0 ? "−" : "") + "$" + (Math.abs(v) / 1e6).toFixed(2) + "M";
+function draw() {
+  const g = +$("g").value / 100, r = +$("r").value / 100;
+  $("gOut").textContent = $("g").value + "%"; $("rOut").textContent = $("r").value + "%";
+  const v = run(g, r), top = Math.max(...v, 1);
+  const best = v.indexOf(Math.max(...v));
+  v.forEach((x, i) => { $("a" + i).textContent = money(x); $("b" + i).style.width = Math.max(0, x / top * 100) + "%"; $("w" + i).style.display = i === best ? "inline-block" : "none"; });
+  const msg = ["Buying comes out ahead with these assumptions.", "The renter who saves comes out ahead with these assumptions.", "Even the renter who spends comes out ahead here: the $154,000 alone grew faster than the home."];
+  $("band").textContent = msg[best] + " Change a slider and watch it flip.";
+}
+$("g").addEventListener("input", draw); $("r").addEventListener("input", draw);
+$("reset").addEventListener("click", () => { $("g").value = 3; $("r").value = 6; draw(); });
+draw();
+</script>
+</body>
+</html>
