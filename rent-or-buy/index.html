@@ -27,7 +27,15 @@
   .bar { height: 100%; border-radius: 6px; transition: width .25s ease; }
   .win { display: inline-block; margin-left: 8px; font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--navy); background: var(--tint); border-radius: 8px; padding: 2px 8px; vertical-align: middle; }
   .band { background: var(--tint); border-radius: 14px; padding: 14px 18px; font-size: 19px; font-weight: 700; margin-top: 14px; }
-  button.reset { margin-top: 12px; border: 1.5px solid var(--border); background: #fff; color: var(--navy); border-radius: 10px; font: inherit; font-size: 16px; padding: 8px 14px; cursor: pointer; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 12px; }
+  .switch { display: flex; align-items: center; gap: 10px; font-size: 16px; cursor: pointer; user-select: none; }
+  .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .track2 { position: relative; width: 46px; height: 26px; border-radius: 13px; background: #C9CED6; flex: 0 0 auto; transition: background .2s; }
+  .knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: left .2s; }
+  .switch input:checked + .track2 { background: var(--navy); }
+  .switch input:checked + .track2 .knob { left: 23px; }
+  .switch input:focus-visible + .track2 { outline: 2px solid var(--gold); outline-offset: 2px; }
+  button.reset { margin-top: 0; border: 1.5px solid var(--border); background: #fff; color: var(--navy); border-radius: 10px; font: inherit; font-size: 16px; padding: 8px 14px; cursor: pointer; }
   ul { margin: 6px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.45; }
   footer { max-width: 620px; margin: 0 auto; color: var(--muted); font-size: 12px; padding: 14px 16px 22px; line-height: 1.35; }
 </style>
@@ -46,17 +54,20 @@
     </div>
     <div class="slider">
       <div class="top"><span>Investments earn each year</span><span class="val" id="rOut"></span></div>
-      <input type="range" id="r" min="2" max="10" step="0.5" value="6" aria-label="Investment return per year">
-      <div class="ends"><span>2%</span><span>10%</span></div>
+      <input type="range" id="r" min="2" max="12" step="0.5" value="6" aria-label="Investment return per year">
+      <div class="ends"><span>2%</span><span>12%</span></div>
     </div>
-    <button class="reset" id="reset">Back to 3% and 6%</button>
+    <div class="controls">
+      <button class="reset" id="reset">Back to 3% and 6%</button>
+      <label class="switch"><input type="checkbox" id="tax"><span class="track2"><span class="knob"></span></span><span>Include the mortgage interest deduction</span></label>
+    </div>
   </div>
 
   <div class="card">
     <div class="label">After 30 years</div>
     <div class="row">
       <div class="name"><span>Buy the loft<span class="win" id="w0">MOST</span></span><span class="amt" id="a0"></span></div>
-      <div class="how">The home, paid off. The saving is forced.</div>
+      <div class="how" id="buyHow">The home, paid off. The saving is forced.</div>
       <div class="track"><div class="bar" id="b0" style="background:var(--navy)"></div></div>
     </div>
     <div class="row">
@@ -81,7 +92,8 @@
       <li>Owner’s other costs: property tax $745, HOA $545, insurance $50 a month, growing 2.5% a year; maintenance 1% of the home’s value a year.</li>
       <li>Rent: $3,677 a month to start for a similar unit, growing 3% a year.</li>
       <li>“The difference” = the owner’s monthly cost minus rent. It starts near $2,100 and shrinks as rent rises. When rent passes the owner’s cost, both renters pay the extra from their investments.</li>
-      <li>Ignores taxes on investment gains, the mortgage interest deduction and the cost of selling the home.</li>
+      <li>The switch adds the mortgage interest deduction for Matt as a buyer (24% federal bracket plus California, itemizing). He uses the tax savings, about $15,700 the first year, to pay extra on the loan, which pays it off in about year 17; after that he invests the payment he no longer makes. Renters get no deduction.</li>
+      <li>Ignores taxes on investment gains and the cost of selling the home.</li>
     </ul>
   </div>
 </main>
@@ -101,18 +113,39 @@ function run(g, ret) {
   }
   return [PRICE * Math.pow(1 + g, 30), save, spend];
 }
+// with the deduction: this year's tax saving comes from last year's interest and goes to extra principal;
+// once the loan is paid off, the freed-up payment is invested
+function buyWithDeduction(g, ret) {
+  const FED = 0.24, CA = 0.093, SD = 16100, STX = 15000, CASD = 5700, CAP = 40000, r = RATE / 12;
+  let bal = LOAN, side = 0, ts = 0, payoff = null;
+  for (let y = 0; y < 30; y++) {
+    let yint = 0;
+    for (let k = 0; k < 12; k++) {
+      let left;
+      if (bal > 0) { const i = bal * r; yint += i; const pay = Math.min(bal + i, PMT + ts / 12); bal = bal + i - pay; left = PMT + ts / 12 - pay; if (bal <= 0 && payoff === null) payoff = y + k / 12; }
+      else left = PMT + ts / 12;
+      side = side * (1 + ret / 12) + left;
+    }
+    const ptax = 745 * 12 * Math.pow(1.025, y);
+    ts = yint > 0 ? Math.max(0, yint + Math.min(ptax + STX * Math.pow(1.03, y), CAP) - SD * Math.pow(1.025, y)) * FED + Math.max(0, yint + ptax - CASD * Math.pow(1.025, y)) * CA : 0;
+  }
+  return { total: PRICE * Math.pow(1 + g, 30) + side, payoff };
+}
 const $ = (id) => document.getElementById(id);
 const money = (v) => (v < 0 ? "−" : "") + "$" + (Math.abs(v) / 1e6).toFixed(2) + "M";
 function draw() {
   const g = +$("g").value / 100, r = +$("r").value / 100;
   $("gOut").textContent = $("g").value + "%"; $("rOut").textContent = $("r").value + "%";
-  const v = run(g, r), top = Math.max(...v, 1);
+  const v = run(g, r);
+  if ($("tax").checked) { const d = buyWithDeduction(g, r); v[0] = d.total; $("buyHow").textContent = "The home, paid off, plus his tax savings: they pay the loan off in about year " + Math.round(d.payoff) + ", then the freed-up payment is invested."; }
+  else $("buyHow").textContent = "The home, paid off. The saving is forced.";
+  const top = Math.max(...v, 1);
   const best = v.indexOf(Math.max(...v));
   v.forEach((x, i) => { $("a" + i).textContent = money(x); $("b" + i).style.width = Math.max(0, x / top * 100) + "%"; $("w" + i).style.display = i === best ? "inline-block" : "none"; });
   const msg = ["Buying comes out ahead with these assumptions.", "The renter who saves comes out ahead with these assumptions.", "Even the renter who spends comes out ahead here: the $154,000 alone grew faster than the home."];
   $("band").textContent = msg[best] + " Change a slider and watch it flip.";
 }
-$("g").addEventListener("input", draw); $("r").addEventListener("input", draw);
+$("g").addEventListener("input", draw); $("r").addEventListener("input", draw); $("tax").addEventListener("change", draw);
 $("reset").addEventListener("click", () => { $("g").value = 3; $("r").value = 6; draw(); });
 draw();
 </script>
