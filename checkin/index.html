@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>BUS 11 · Check-In Results</title>
+<style>body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky bar, left question index on wide screens, one reading column; answers are the content, themes are the index into them. */
+:root {
+  --bg: #f4f6f7; --surface: #ffffff; --ink: #14263a; --muted: #5a6b79; --line: #dbe2e6;
+  --teal: #14566b; --teal-soft: #d7e8ec; --bar: #d0dfe4; --gold: #b07d1a; --gold-soft: #f6ead0;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1923; --surface: #15232f; --ink: #e5edf2; --muted: #9aacb9; --line: #263744;
+  --teal: #6cbccd; --teal-soft: #1d3a45; --bar: #284250; --gold: #e2b455; --gold-soft: #3a3020; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1923; --surface: #15232f; --ink: #e5edf2; --muted: #9aacb9; --line: #263744;
+  --teal: #6cbccd; --teal-soft: #1d3a45; --bar: #284250; --gold: #e2b455; --gold-soft: #3a3020; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-in { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.brand { font: 700 18px/1.2 var(--display); margin-right: auto; }
+.brand small { display: block; font: 400 13px var(--body); color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+.seg button[aria-pressed="true"] { background: var(--teal); color: var(--surface); }
+.sl-btn { border: 1px solid var(--gold); background: var(--gold-soft); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+.sl-btn b { font-family: var(--mono); }
+
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 32px;
+  padding-block: 24px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+nav.idx { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); align-self: start; max-height: calc(100vh - 100px); overflow: auto; font-size: 14px; }
+nav.idx h4 { font: 600 11px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 4px; }
+nav.idx a { display: flex; gap: 8px; padding: 3px 0; color: var(--ink); text-decoration: none; }
+nav.idx a span { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 28px; }
+nav.idx a:hover { color: var(--teal); }
+main { min-width: 0; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } nav.idx { display: none; } }
+
+.intro { max-width: 70ch; color: var(--muted); margin: 0 0 20px; }
+.glance { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 36px; }
+.glance div { background: var(--surface); padding: 14px 16px; }
+.glance b { display: block; font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.glance b small { font: 500 14px var(--mono); color: var(--muted); }
+.glance span { font-size: 14px; color: var(--muted); }
+@media (max-width: 560px) { .glance { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.part { font: 600 12px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin: 40px 0 8px; }
+section.q { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; margin-bottom: 18px; scroll-margin-top: 90px; }
+@media (max-width: 560px) { section.q { padding: 16px; } }
+.qhead { display: flex; gap: 12px; align-items: baseline; }
+.qnum { font: 500 13px var(--mono); color: var(--muted); }
+.q h2 { font: 700 21px/1.25 var(--display); margin: 0; text-wrap: balance; }
+.qfull { font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.read { margin: 14px 0 16px; padding: 10px 14px; background: var(--teal-soft); border-radius: 8px; font-size: 15px; max-width: 75ch; }
+.read b { font-weight: 600; }
+
+.bars { display: grid; gap: 4px; margin: 0 0 6px; }
+.brow { display: grid; grid-template-columns: minmax(0, 1fr) 34px 28px; align-items: center; gap: 8px; }
+.bbtn { position: relative; display: block; width: 100%; text-align: left; border: 1px solid transparent; border-radius: 6px; background: transparent; padding: 5px 10px; cursor: pointer; overflow: hidden; }
+.bbtn .fill { position: absolute; inset: 0 auto 0 0; background: var(--bar); border-radius: 6px 3px 3px 6px; }
+.bbtn .lbl { position: relative; font-size: 15px; }
+.bbtn[aria-pressed="true"] { border-color: var(--teal); }
+.bbtn:hover { border-color: var(--line); }
+.static .bbtn { cursor: default; }
+.cnt { font: 500 14px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.star { border: 0; background: transparent; cursor: pointer; font-size: 17px; line-height: 1; color: var(--muted); padding: 2px; }
+.star[aria-pressed="true"] { color: var(--gold); }
+.scale-note { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+
+.filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0 8px; font-size: 14px; color: var(--muted); }
+.filter button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 2px 10px; cursor: pointer; font-size: 13px; }
+.answers { border-top: 1px solid var(--line); }
+.ans { display: grid; grid-template-columns: 40px minmax(0, 1fr) 28px; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ans:last-child { border-bottom: 0; }
+.rtag { font: 500 13px var(--mono); color: var(--muted); padding-top: 2px; background: none; border: 0; cursor: pointer; text-align: left; }
+.rtag:hover { color: var(--teal); }
+.txt { white-space: pre-line; max-width: 75ch; }
+.txt.clamp { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.more { border: 0; background: none; color: var(--teal); cursor: pointer; padding: 0; font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--muted); background: transparent; cursor: pointer; }
+.chip:hover { border-color: var(--teal); color: var(--teal); }
+.blank { color: var(--muted); font-style: italic; }
+.answers-toggle { margin-top: 10px; border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: center; }
+th { font: 600 12px var(--body); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+td:first-child, th:first-child { text-align: left; }
+td.heat { font-family: var(--mono); font-size: 14px; }
+td.sum { font-weight: 600; color: var(--teal); }
+
+.heard { margin: 14px 0 16px; padding-left: 22px; max-width: 75ch; display: grid; gap: 6px; }
+.heard li { padding-left: 2px; }
+.heard li::marker { color: var(--teal); }
+.status { display: flex; height: 26px; border-radius: 6px; overflow: hidden; gap: 2px; margin: 4px 0 6px; }
+.status div { display: flex; align-items: center; padding: 0 8px; font-size: 13px; white-space: nowrap; overflow: hidden; color: var(--ink); }
+
+/* By-student view */
+.who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+.who select, .who button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 10px; }
+.who button { cursor: pointer; }
+.rrow { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 6px 20px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rrow h3 { font: 600 14px/1.35 var(--body); margin: 0; color: var(--muted); }
+@media (max-width: 560px) { .rrow { grid-template-columns: minmax(0, 1fr); } }
+.pill { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: 13px; background: var(--teal-soft); margin: 0 4px 4px 0; }
+
+/* Shortlist panel */
+.panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); background: var(--surface); border-left: 1px solid var(--line); z-index: 20;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) max(18px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 18px) 18px;
+  display: flex; flex-direction: column; gap: 12px; box-shadow: -8px 0 24px rgba(0,0,0,.12); }
+.panel h3 { font: 700 19px var(--display); margin: 0; }
+.panel .list { overflow: auto; flex: 1; display: grid; gap: 10px; align-content: start; }
+.panel .item { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.panel .item small { display: block; color: var(--muted); font-size: 12px; }
+.panel .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.panel .row button { border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.panel .row button.primary { background: var(--teal); color: var(--surface); border-color: var(--teal); }
+.panel textarea { width: 100%; height: 120px; font: 13px var(--mono); }
+.x { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; }
+@media (prefers-reduced-motion: no-preference) { section.q.flash { animation: fl 1.2s ease-out; } @keyframes fl { from { box-shadow: 0 0 0 3px var(--teal); } to { box-shadow: 0 0 0 0 transparent; } } }
+</style>
+
+</head>
+<body>
+<header class="bar"><div class="bar-in">
+  <div class="brand">BUS 11 Mid-Quarter Check-In<small>25 of 30 students · anonymous · Class 13 case, Fall 2026</small></div>
+  <div class="seg" role="group" aria-label="View">
+    <button id="v-q" aria-pressed="true">By question</button>
+    <button id="v-s" aria-pressed="false">By student</button>
+    <button id="v-p" aria-pressed="false">Student version</button>
+  </div>
+  <button class="sl-btn" id="sl-open">★ Shortlist <b id="sl-n">0</b></button>
+</div></header>
+
+<div class="wrap">
+  <nav class="idx" id="idx" aria-label="Questions"></nav>
+  <main>
+    <div id="view-q">
+      <p class="intro">Every answer from the survey, grouped by question. Bars show how many students touched each theme; click a bar to read just those answers. Themes are Claude's hand-coding, and one answer can count toward several. Students are numbered R1–R25 in a shuffled order that doesn't match the Canvas roster. Star anything you might put on a slide.</p>
+      <div class="glance" id="glance"></div>
+      <div id="qs"></div>
+    </div>
+    <div id="view-s" hidden>
+      <p class="intro">One student's whole survey at a time, to see how their answers hang together. Numbers are shuffled and match the R-numbers in the question view.</p>
+      <div class="who">
+        <button id="prev" aria-label="Previous student">←</button>
+        <select id="pick" aria-label="Student"></select>
+        <button id="next" aria-label="Next student">→</button>
+      </div>
+      <section class="q" id="student"></section>
+    </div>
+    <div id="view-p" hidden>
+      <p class="intro" id="p-intro"></p>
+      <div class="glance" id="glance-p"></div>
+      <div id="qs-p"></div>
+    </div>
+  </main>
+</div>
+
+<aside class="panel" id="panel" hidden aria-label="Shortlist">
+  <div class="row" style="justify-content:space-between;align-items:center"><h3>Shortlist for slides</h3><button class="x" id="sl-close" aria-label="Close">×</button></div>
+  <p class="scale-note" style="margin:0">Starred themes and quotes, in question order. Saved in this browser only.</p>
+  <div class="list" id="sl-list"></div>
+  <div class="row"><button class="primary" id="sl-copy">Copy as text</button><button id="sl-clear">Clear all</button></div>
+  <textarea id="sl-text" hidden aria-label="Shortlist text"></textarea>
+</aside>
+
+<script>
+const PUBLIC = true;   // true on the student page: no answers are embedded there at all
+const DATA = [];
+const TH = {};
+const AGG = {"n": 25, "q": {"rem": {"bars": [["Compound interest, start early", 12], ["Debt and credit (cards, scores, interest)", 10], ["Budget rules and tracking spending", 8], ["Match the investment to your timeline", 6], ["Long-term, set-and-forget investing (index funds)", 6]]}, "design": {"bars": [["Keep it the way it is", 6], ["Short lecture, then the case", 6], ["More of the period on the case", 5], ["Group work and teamwork", 4], ["More interaction and discussion in lecture", 4]]}, "engaged": {"bars": [["Walk-to-the-sign timeline activity", 8], ["Live Robinhood / open-an-account demo", 5], ["Working the case in groups", 4], ["Vevox polls", 3], ["Chris's money box / candy business", 3]]}, "checked": {"bars": [["Never / can't think of one", 9], ["Long lecture stretches without examples or activities", 4], ["Fast, complex or data-heavy material", 3], ["Repetition: last-class review, familiar topics, slides read aloud", 3], ["Rainy day / not feeling well", 2]]}, "start": {"bars": [["Nothing new / keep doing what you're doing", 7], ["More group work, projects, hands-on activities", 6], ["More real-life examples", 3], ["Short practice quizzes", 2], ["Slower pace, help with new vocabulary", 2]]}, "stop": {"bars": [["Nothing", 14], ["Lecturing most of the period", 3], ["Repeating what most already get, last-class review", 3]]}, "keep": {"bars": [["Case studies", 7], ["Real-life examples and stories", 6], ["Everything / the teaching style", 4], ["Humor and personality", 3], ["Polls (including the hip-hop questions)", 3]]}, "change": {"bars": [["More class time, more case time in class", 8], ["More engaging, hands-on activities", 4], ["No change", 3], ["More group work", 2]]}, "helps": {"bars": [["Lectures", 16], ["Case studies", 12], ["Slides", 10], ["Participation and discussion", 6], ["Readings and supplemental material", 3]]}, "else": {}, "money": {"status": {"did": 15, "plan": 8, "none": 2}, "bars": [["Started or increased investing", 5], ["Built a budget or tracked spending", 4], ["More careful spending on wants", 4], ["Saving more", 3], ["Smarter credit card use (above the minimum, cash back)", 2]]}, "cases": {"bars": [["A lot", 18], ["Somewhat", 7], ["A little", 0], ["Not at all", 0]]}, "format": {"bars": [["Case woven through the lecture", 12], ["Lecture first, case at the end", 12], ["Watch at home, case in class", 1], ["Something else", 0]]}, "practice": {"bars": [["Case studies, like now", 14], ["A mix of cases and quizzes", 10], ["Quizzes", 0], ["Something else", 1]]}, "feedback": {"bars": [["Very helpful", 20], ["Somewhat helpful", 5], ["Not very helpful", 0], ["I don't usually read it", 0], ["Didn't know I was getting it", 0]]}, "polls": {"bars": [["Helpful and fun", 19], ["Helpful, not especially fun", 1], ["Fun, not especially helpful", 4], ["Neither", 1], ["Distracting", 0]]}, "pace": {"bars": [["Too slow", 0], ["About right", 21], ["Too fast", 4]]}, "length": {"bars": [["Too long", 0], ["About right", 15], ["Too short", 10]]}, "more": {"grid3": [["lecture", 1, 21, 3], ["hands-on activity", 0, 15, 10], ["class discussion", 1, 15, 9]]}, "topics": {"topics": [["Choosing and using financial services", 6, 13, 6, 0], ["Index vs. active investing", 8, 11, 3, 3], ["Investing in yourself", 11, 9, 5, 0], ["Credit scores and credit cards", 11, 10, 3, 1], ["Compound interest and investing basics", 12, 10, 3, 0], ["Car loans and home loans", 5, 18, 2, 0], ["Personal financial statements", 14, 9, 2, 0], ["Budgeting", 15, 10, 0, 0]]}}, "glance": [[25, "/30", "students answered"], [18, "/25", "say the cases help a lot"], [20, "/25", "find case feedback very helpful"], [21, "/25", "say the pace is about right"], [10, "/25", "say class is too short"], [19, "/25", "call the polls helpful and fun"]]};         // totals only, computed by build.py
+const STU = {"design": ["The most common ask: a shorter lecture so more of the period goes to working the case, ideally in groups.", "Some of you want more interaction inside the lecture itself: quick questions, discussion, examples."], "start": ["One-off ideas worth trying: a guest speaker tied to a case, textbook page references on the slides, and homework challenges that push you to act."], "change": ["More engaging, hands-on activities, and more group work.", "Bigger ideas: a quarter-long simulation where everyone manages a made-up financial life, cases due a day or two after class, and a room set up for group work."], "else": ["Unfortunately, nobody said anything really mean."]};         // student-facing summary bullets
+const N = AGG.n;
+
+const CH = (r, i) => DATA[r].ch.split(' ')[i];
+const Q = [
+ {key:'rem', part:'Part 1 · The questions that shape the class', n:1, type:'text', title:"Ideas they'll remember in a year", full:"What are 3 ideas from this class that you'll still remember a year from now?"},
+ {key:'money', n:2, type:'text', title:'What they did differently with money', full:'Have you done anything differently with your own money because of this class, or do you plan to?'},
+ {key:'cases', n:3, type:'choice', title:'How much the cases help', full:'How much do the case studies help you learn the material?', get:r=>DATA[r].cases, opts:[['A lot','A lot'],['Somewhat','Somewhat'],['A little','A little'],['Not at all','Not at all']]},
+ {key:'format', n:4, type:'choice', title:'Which case format helps most', full:"We've tried a few ways of running class with the case study. Which helps you learn the most?", get:r=>DATA[r].format, opts:[['W','Case woven through the lecture'],['L','Lecture first, case at the end'],['F','Watch at home, case in class'],['O','Something else']]},
+ {key:'design', n:5, type:'text', title:'How they would design a class period', full:'If you could design how a class period works, what would it look like, and why?'},
+ {key:'engaged', n:6, type:'text', title:'Most engaged when', full:'Think of a moment in this class when you were most engaged. What was happening?'},
+ {key:'checked', n:7, type:'text', title:'Most checked out when', full:'Think of a moment when you were most checked out. What was happening?'},
+ {key:'start', n:8, type:'text', title:'Start', full:'What should I START doing that would help them learn?'},
+ {key:'stop', n:9, type:'text', title:'Stop', full:"What should I STOP doing because it isn't helping?"},
+ {key:'keep', n:10, type:'text', title:'Keep', full:'What should I KEEP doing because it works?'},
+ {key:'change', n:11, type:'text', title:'One change', full:'If you could make just one change to this course for future students, what would it be?'},
+ {key:'topics', part:'Part 2 · Quick ratings', n:12, type:'topics', title:'How well they understand each topic', full:'How well do you understand each of these topics? (self-rating)'},
+ {key:'helps', n:13, type:'text', title:'What part of the class helps most', full:'What part of how this class is set up helps you learn the most?'},
+ {key:'practice', n:14, type:'choice', title:'How they want to practice', full:'If you could choose how to practice what we cover each week, which would you pick?', get:r=>CH(r,0), opts:[['C','Case studies, like now'],['X','A mix of cases and quizzes'],['Q','Quizzes'],['O','Something else']]},
+ {key:'feedback', n:15, type:'choice', title:'Case feedback', full:'How helpful is the feedback you get on your case studies?', get:r=>CH(r,1), opts:[['V','Very helpful'],['S','Somewhat helpful'],['N','Not very helpful'],['D',"I don't usually read it"],['K',"Didn't know I was getting it"]]},
+ {key:'polls', n:16, type:'choice', title:'In-class polls', full:'How do the in-class polls work for you?', get:r=>CH(r,2), opts:[['HF','Helpful and fun'],['H','Helpful, not especially fun'],['F','Fun, not especially helpful'],['N','Neither'],['D','Distracting']]},
+ {key:'more', n:'17–19', type:'grid3', title:'More or less of each, compared with now', full:'Compared with now, how much ___ would you like in class?'},
+ {key:'pace', n:20, type:'choice', title:'Pace', full:'The pace of class has been:', get:r=>CH(r,6), opts:[['TS','Too slow'],['R','About right'],['F','Too fast']]},
+ {key:'length', n:21, type:'choice', title:'Length of class', full:'The length of each class session is:', get:r=>CH(r,7), opts:[['TL','Too long'],['R','About right'],['T','Too short']]},
+ {key:'else', n:22, type:'text', title:'"Last chance to say something mean"', full:'Anything else you want me to know? Last chance to say something mean to me...'}
+];
+const TOPICS = ['Budgeting','Personal financial statements','Choosing and using financial services','Credit scores and credit cards','Car loans and home loans','Compound interest and investing basics','Investing in yourself','Index vs. active investing'];
+const SCALE = [['E','Could explain'],['M','Mostly get it'],['F','Still fuzzy'],['L','Lost me']];
+const GRID3 = [['lecture',3],['hands-on activity',4],['class discussion',5]];
+const LMS = [['L','Less'],['S','About the same'],['M','More']];
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const bold = s => esc(s).replace(/\b(R\d{1,2})\b/g, '<b>$1</b>');
+
+/* ---------- shortlist (per-browser convenience) ---------- */
+const SLKEY = 'bus11-checkin-shortlist-v1';
+let SL = [];
+try { SL = JSON.parse(localStorage.getItem(SLKEY) || '[]'); } catch (e) { SL = []; }
+const saveSL = () => { try { localStorage.setItem(SLKEY, JSON.stringify(SL)); } catch (e) {} renderSL(); };
+const isStar = id => SL.some(x => x.id === id);
+function toggleStar(item) {
+  const i = SL.findIndex(x => x.id === item.id);
+  if (i >= 0) SL.splice(i, 1); else SL.push(item);
+  saveSL();
+  document.querySelectorAll(`[data-star="${CSS.escape(item.id)}"]`).forEach(b => b.setAttribute('aria-pressed', isStar(item.id)));
+}
+const qOrder = k => Q.findIndex(q => q.key === k);
+function slText() {
+  const items = [...SL].sort((a, b) => qOrder(a.q) - qOrder(b.q));
+  let out = [], last = '';
+  for (const it of items) {
+    const q = Q[qOrder(it.q)];
+    if (it.q !== last) { out.push((out.length ? '\n' : '') + q.title.toUpperCase()); last = it.q; }
+    out.push(it.kind === 'theme' ? `- ${it.text} (${it.n} of ${N})` : `- "${it.text.replace(/\s+/g, ' ').trim()}" (${it.r})`);
+  }
+  return out.join('\n');
+}
+function renderSL() {
+  document.getElementById('sl-n').textContent = SL.length;
+  const list = document.getElementById('sl-list');
+  if (!SL.length) { list.innerHTML = '<p class="scale-note">Nothing starred yet. Use ☆ next to a theme bar or an answer.</p>'; return; }
+  const items = [...SL].sort((a, b) => qOrder(a.q) - qOrder(b.q));
+  list.innerHTML = items.map(it => `<div class="item"><div><small>${esc(Q[qOrder(it.q)].title)} · ${it.kind === 'theme' ? 'theme, ' + it.n + ' of ' + N : it.r}</small>${esc(it.kind === 'theme' ? it.text : it.text.length > 220 ? it.text.slice(0, 220) + '…' : it.text)}</div><button class="x" data-unstar="${esc(it.id)}" aria-label="Remove">×</button></div>`).join('');
+}
+document.getElementById('sl-list').addEventListener('click', e => {
+  const b = e.target.closest('[data-unstar]'); if (!b) return;
+  const it = SL.find(x => x.id === b.dataset.unstar); if (it) toggleStar(it);
+});
+document.getElementById('sl-open').onclick = () => { document.getElementById('panel').hidden = false; };
+document.getElementById('sl-close').onclick = () => { document.getElementById('panel').hidden = true; };
+document.getElementById('sl-clear').onclick = () => { const ids = SL.map(x => x.id); SL = []; saveSL(); ids.forEach(id => document.querySelectorAll(`[data-star="${CSS.escape(id)}"]`).forEach(b => b.setAttribute('aria-pressed', 'false'))); };
+document.getElementById('sl-copy').onclick = async () => {
+  const t = slText(), ta = document.getElementById('sl-text'), btn = document.getElementById('sl-copy');
+  try { await navigator.clipboard.writeText(t); btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy as text', 1500); }
+  catch (e) { ta.hidden = false; ta.value = t; ta.focus(); ta.select(); btn.textContent = 'Select and copy below'; }
+};
+
+/* ---------- question view ---------- */
+const filters = {};
+const expanded = {};
+function themeOf(key, r) { return (TH[key].themes || []).filter(t => t[1].includes(r + 1)).map(t => t[0]); }
+
+function barsHTML(key, rows, clickable) {
+  const max = N;
+  // Catch-all rows (Other, Blank, No answer) sit at the bottom whatever their count.
+  const tail = l => /^(Other|Blank|No answer)/.test(l) ? 1 : 0;
+  const sorted = clickable ? rows.map((r, i) => ({...r, i})).sort((a, b) => tail(a.label) - tail(b.label) || b.n - a.n || a.i - b.i) : rows;
+  const topCut = clickable ? sorted.filter(r => !tail(r.label) && !/^(Nothing|Never|No \/|No change|Keep it|Nothing new|No idea|Did: |Plans )/.test(r.label)).slice(0, 3).map(r => r.label) : [];
+  return `<div class="bars ${clickable ? '' : 'static'}">` + sorted.map(r => {
+    const id = `t:${key}:${r.label}`;
+    const pressed = filters[key] === r.label;
+    return `<div class="brow">
+      <button class="bbtn ${topCut.includes(r.label) ? 'top' : ''}" ${clickable ? `data-filter="${esc(key)}" data-label="${esc(r.label)}" aria-pressed="${pressed}"` : 'tabindex="-1"'}>
+        <span class="fill" style="width:${(r.n / max * 100).toFixed(1)}%"></span><span class="lbl">${esc(r.label)}</span></button>
+      <span class="cnt">${r.n}</span>
+      <button class="star" data-star="${esc(id)}" data-q="${esc(key)}" data-kind="theme" data-text="${esc(r.label)}" data-n="${r.n}" aria-pressed="${isStar(id)}" aria-label="Star theme">★</button>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function answersHTML(q) {
+  const f = filters[q.key];
+  const rs = [...Array(N).keys()].filter(r => !f || themeOf(q.key, r).includes(f));
+  const showAll = expanded[q.key] || f;
+  const list = showAll ? rs : rs.slice(0, 6);
+  const rows = list.map(r => {
+    const t = (DATA[r][q.key] || '').trim();
+    const id = `a:${q.key}:${r}`;
+    const chips = themeOf(q.key, r).filter(x => x !== f).map(x => `<button class="chip" data-filter="${esc(q.key)}" data-label="${esc(x)}">${esc(x)}</button>`).join('');
+    const long = t.length > 380;
+    return `<div class="ans">
+      <button class="rtag" data-goto="${r}" title="See R${r + 1}'s whole survey">R${r + 1}</button>
+      <div>${t ? `<div class="txt ${long ? 'clamp' : ''}">${esc(t)}</div>${long ? `<button class="more" data-more>Show all</button>` : ''}` : '<span class="blank">No answer</span>'}
+        ${chips ? `<div class="chips">${chips}</div>` : ''}</div>
+      ${t ? `<button class="star" data-star="${esc(id)}" data-q="${esc(q.key)}" data-kind="quote" data-r="R${r + 1}" data-text="${esc(t)}" aria-pressed="${isStar(id)}" aria-label="Star answer">★</button>` : '<span></span>'}
+    </div>`;
+  }).join('');
+  const head = f ? `<div class="filter">Showing ${rs.length} answer${rs.length === 1 ? '' : 's'} coded <b>${esc(f)}</b> <button data-filter="${esc(q.key)}" data-label="">Show all answers</button></div>`
+                 : `<div class="filter">All ${N} answers</div>`;
+  const toggle = (!f && rs.length > 6) ? `<button class="answers-toggle" data-expand="${esc(q.key)}">${expanded[q.key] ? 'Show fewer' : `Show all ${rs.length} answers`}</button>` : '';
+  return head + `<div class="answers">${rows}</div>` + toggle;
+}
+
+function choiceRows(q) { return q.opts.map(([code, label]) => ({label, n: DATA.filter((_, r) => q.get(r) === code).length})); }
+
+function sectionHTML(q) {
+  const t = TH[q.key] || {};
+  let body = '';
+  if (q.type === 'text') {
+    if (q.key === 'money') {
+      const s = t.status, cols = [['did', 'Already did something', 'var(--teal-soft)'], ['plan', 'Has a plan', 'var(--bar)'], ['none', 'Nothing yet', 'var(--line)']];
+      body += `<div class="status">` + cols.map(([k, l, c]) => `<div style="flex:${s[k].length};background:${c}" title="${l}: ${s[k].length}">${l} · ${s[k].length}</div>`).join('') + `</div>`;
+    }
+    body += barsHTML(q.key, t.themes.map(([label, rs]) => ({label, n: rs.length})), true);
+    body += `<div id="ans-${q.key}">${answersHTML(q)}</div>`;
+  } else if (q.type === 'choice') {
+    body += barsHTML(q.key, choiceRows(q), false);
+  } else if (q.type === 'topics') {
+    const rows = TOPICS.map((name, i) => { const c = {}; SCALE.forEach(([k]) => c[k] = DATA.filter(d => d.topics[i] === k).length); return {name, c, weak: c.F + c.L}; })
+      .sort((a, b) => b.weak - a.weak || a.c.E - b.c.E);
+    body += `<div class="tablewrap"><table><thead><tr><th>Topic</th>${SCALE.map(s => `<th>${s[1]}</th>`).join('')}<th>Fuzzy + lost</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${esc(r.name)}</td>${SCALE.map(([k]) => `<td class="heat" style="background:color-mix(in srgb, ${k === 'E' || k === 'M' ? 'var(--teal)' : 'var(--gold)'} ${Math.round(r.c[k] / N * 55)}%, transparent)">${r.c[k]}</td>`).join('')}<td class="heat sum">${r.weak}</td></tr>`).join('') +
+      `</tbody></table></div><p class="scale-note">Sorted weakest first. Nobody chose "I missed this one."</p>`;
+  } else if (q.type === 'grid3') {
+    body += `<div class="tablewrap"><table><thead><tr><th>In class</th>${LMS.map(l => `<th>${l[1]}</th>`).join('')}</tr></thead><tbody>` +
+      GRID3.map(([name, i]) => `<tr><td>${esc(name)}</td>${LMS.map(([k]) => { const n = DATA.filter((_, r) => CH(r, i) === k).length; return `<td class="heat" style="background:color-mix(in srgb, var(--teal) ${Math.round(n / N * 55)}%, transparent)">${n}</td>`; }).join('')}</tr>`).join('') +
+      `</tbody></table></div>`;
+  }
+  return `${q.part ? `<div class="part">${esc(q.part)}</div>` : ''}
+  <section class="q" id="q-${q.key}">
+    <div class="qhead"><span class="qnum">Q${q.n}</span><h2>${esc(q.title)}</h2></div>
+    <p class="qfull">${esc(q.full)}</p>
+    ${t.read ? `<div class="read"><b>Read:</b> ${bold(t.read)}</div>` : ''}
+    ${body}
+  </section>`;
+}
+
+function renderQs() {
+  document.getElementById('qs').innerHTML = Q.map(sectionHTML).join('');
+}
+function rerenderAnswers(key) {
+  const q = Q.find(x => x.key === key);
+  const sec = document.getElementById('q-' + key);
+  sec.querySelectorAll('.bbtn[data-filter]').forEach(b => b.setAttribute('aria-pressed', filters[key] === b.dataset.label));
+  document.getElementById('ans-' + key).innerHTML = answersHTML(q);
+}
+
+const glanceHTML = AGG.glance.map(([n, d, l]) => `<div><b>${n}<small>${d}</small></b><span>${esc(l)}</span></div>`).join('');
+document.getElementById('glance').innerHTML = glanceHTML;
+document.getElementById('glance-p').innerHTML = glanceHTML;
+
+// Student-facing headings speak to the reader: "Ideas they'll remember" -> "Ideas you'll remember".
+const youTitle = t => t.replace("they'll", "you'll").replace('they would', "you'd").replace(/\bthey\b/, 'you');
+function renderNav(prefix) {
+  document.getElementById('idx').innerHTML = Q.map(q => `${q.part ? `<h4>${esc(q.part.split(' · ')[0])}</h4>` : ''}<a href="#${prefix}-${q.key}" data-jump="${prefix}-${q.key}"><span>Q${q.n}</span>${esc(prefix === 'p' ? youTitle(q.title) : q.title)}</a>`).join('');
+}
+
+/* ---------- student version: built only from AGG + STU ---------- */
+function pubBars(rows, highlight) {
+  const skip = /^(Nothing|Never|No change|Keep it)/;
+  const top = highlight ? rows.filter(r => !skip.test(r[0])).slice(0, 3).map(r => r[0]) : [];
+  return `<div class="bars static">` + rows.map(([label, n]) => `<div class="brow">
+      <span class="bbtn ${top.includes(label) ? 'top' : ''}"><span class="fill" style="width:${(n / N * 100).toFixed(1)}%"></span><span class="lbl">${esc(label)}</span></span>
+      <span class="cnt">${n}</span><span></span></div>`).join('') + `</div>`;
+}
+function heat(n, color) { return `background:color-mix(in srgb, ${color} ${Math.round(n / N * 55)}%, transparent)`; }
+function sectionPub(q) {
+  const a = AGG.q[q.key] || {}, bullets = STU[q.key] || [];
+  let body = bullets.length ? `<ul class="heard">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : '';
+  if (a.status) {
+    const cols = [['did', 'Already did something', 'var(--teal-soft)'], ['plan', 'Has a plan', 'var(--bar)'], ['none', 'Nothing yet', 'var(--line)']];
+    body += `<div class="status">` + cols.map(([k, l, c]) => `<div style="flex:${a.status[k]};background:${c}" title="${l}: ${a.status[k]}">${l} · ${a.status[k]}</div>`).join('') + `</div>`;
+  }
+  if (a.bars) body += pubBars(a.bars, q.type === 'text');
+  if (a.bars && q.type === 'text') body += `<p class="scale-note">${q.key === 'money' ? 'Things already done, by number of students. ' : 'Most common themes, by number of students. '}One answer can count toward more than one theme.</p>`;
+  if (a.topics) body += `<div class="tablewrap"><table><thead><tr><th>Topic</th>${SCALE.map(s => `<th>${s[1]}</th>`).join('')}<th>Fuzzy + lost</th></tr></thead><tbody>` +
+      a.topics.map(([name, E, M, F, L]) => `<tr><td>${esc(name)}</td><td class="heat" style="${heat(E, 'var(--teal)')}">${E}</td><td class="heat" style="${heat(M, 'var(--teal)')}">${M}</td><td class="heat" style="${heat(F, 'var(--gold)')}">${F}</td><td class="heat" style="${heat(L, 'var(--gold)')}">${L}</td><td class="heat sum">${F + L}</td></tr>`).join('') +
+      `</tbody></table></div>`;
+  if (a.grid3) body += `<div class="tablewrap"><table><thead><tr><th>In class</th>${LMS.map(l => `<th>${l[1]}</th>`).join('')}</tr></thead><tbody>` +
+      a.grid3.map(([name, ...ns]) => `<tr><td>${esc(name)}</td>${ns.map(n => `<td class="heat" style="${heat(n, 'var(--teal)')}">${n}</td>`).join('')}</tr>`).join('') + `</tbody></table></div>`;
+  return `${q.part ? `<div class="part">${esc(q.part)}</div>` : ''}
+  <section class="q" id="p-${q.key}">
+    <div class="qhead"><span class="qnum">Q${q.n}</span><h2>${esc(youTitle(q.title))}</h2></div>
+    <p class="qfull">${esc(q.full)}</p>
+    ${body}
+  </section>`;
+}
+document.getElementById('qs-p').innerHTML = Q.map(sectionPub).join('');
+document.getElementById('p-intro').textContent = PUBLIC
+  ? `Here's what ${N} of you told me in the mid-quarter check-in, summarized by question. The survey was anonymous, so this page shows totals and themes only, no one's individual answers. Thank you for taking it seriously.`
+  : 'Preview of the student page. The link you share with students is a separate page that holds only these summaries and totals, with no individual answers in it.';
+
+/* ---------- student view ---------- */
+let cur = 0;
+function label(q, r) {
+  if (q.type === 'choice') { const o = q.opts.find(o => o[0] === q.get(r)); return o ? o[1] : '—'; }
+  return '';
+}
+function renderStudent() {
+  const r = cur;
+  document.getElementById('pick').value = r;
+  const rows = Q.map(q => {
+    let v;
+    if (q.type === 'text') { const t = (DATA[r][q.key] || '').trim(); v = t ? `<div class="txt">${esc(t)}</div>` : '<span class="blank">No answer</span>';
+      const th = themeOf(q.key, r); if (th.length) v += `<div class="chips">${th.map(x => `<span class="chip" style="cursor:default">${esc(x)}</span>`).join('')}</div>`; }
+    else if (q.type === 'choice') v = `<span class="pill">${esc(label(q, r))}</span>`;
+    else if (q.type === 'topics') v = TOPICS.map((n, i) => `<span class="pill" title="${esc(n)}">${esc(n)}: ${SCALE.find(s => s[0] === DATA[r].topics[i])[1]}</span>`).join('');
+    else v = GRID3.map(([n, i]) => `<span class="pill">${esc(n)}: ${LMS.find(l => l[0] === CH(r, i))[1]}</span>`).join('');
+    return `<div class="rrow"><h3>Q${q.n} · ${esc(q.title)}</h3><div>${v}</div></div>`;
+  }).join('');
+  document.getElementById('student').innerHTML = `<div class="qhead"><span class="qnum">Student</span><h2>R${r + 1}</h2></div>${rows}`;
+}
+document.getElementById('pick').innerHTML = [...Array(N).keys()].map(i => `<option value="${i}">R${i + 1}</option>`).join('');
+document.getElementById('pick').onchange = e => { cur = +e.target.value; renderStudent(); };
+document.getElementById('prev').onclick = () => { cur = (cur + N - 1) % N; renderStudent(); };
+document.getElementById('next').onclick = () => { cur = (cur + 1) % N; renderStudent(); };
+
+function setView(v) {
+  for (const k of ['q', 's', 'p']) {
+    const view = document.getElementById('view-' + k), btn = document.getElementById('v-' + k);
+    if (view) view.hidden = v !== k;
+    if (btn) btn.setAttribute('aria-pressed', v === k);
+  }
+  document.getElementById('idx').style.visibility = v === 's' ? 'hidden' : 'visible';
+  renderNav(v === 'p' ? 'p' : 'q');
+  if (v === 's') renderStudent();
+  if (!PUBLIC) { try { localStorage.setItem('bus11-checkin-view', v); } catch (e) {} }
+}
+document.getElementById('v-q').onclick = () => setView('q');
+document.getElementById('v-s').onclick = () => setView('s');
+document.getElementById('v-p').onclick = () => setView('p');
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const st = e.target.closest('[data-star]');
+  if (st) { const d = st.dataset; toggleStar({id: d.star, q: d.q, kind: d.kind, text: d.text, n: d.n ? +d.n : undefined, r: d.r}); return; }
+  const fb = e.target.closest('[data-filter]');
+  if (fb) { const k = fb.dataset.filter, l = fb.dataset.label; filters[k] = (filters[k] === l || !l) ? '' : l; rerenderAnswers(k); return; }
+  const ex = e.target.closest('[data-expand]');
+  if (ex) { const k = ex.dataset.expand; expanded[k] = !expanded[k]; rerenderAnswers(k); if (!expanded[k]) document.getElementById('q-' + k).scrollIntoView({block: 'start'}); return; }
+  const mo = e.target.closest('[data-more]');
+  if (mo) { const t = mo.previousElementSibling; t.classList.toggle('clamp'); mo.textContent = t.classList.contains('clamp') ? 'Show all' : 'Show less'; return; }
+  const go = e.target.closest('[data-goto]');
+  if (go) { cur = +go.dataset.goto; setView('s'); window.scrollTo({top: 0}); return; }
+  const j = e.target.closest('[data-jump]');
+  if (j) { e.preventDefault(); const s = document.getElementById(j.dataset.jump); s.scrollIntoView({block: 'start', behavior: 'smooth'}); s.classList.remove('flash'); void s.offsetWidth; s.classList.add('flash'); }
+});
+
+if (PUBLIC) {
+  // Student page: only the summary view exists; the toggle and shortlist are removed.
+  document.querySelector('.seg').remove();
+  document.getElementById('sl-open').remove();
+  document.getElementById('panel').remove();
+  document.getElementById('view-q').remove();
+  document.getElementById('view-s').remove();
+  document.querySelector('.brand small').textContent = `What ${N} of you told me · BUS 11, Fall 2026`;
+  setView('p');
+} else {
+  renderQs();
+  renderSL();
+  let startView = 'q';
+  try { startView = localStorage.getItem('bus11-checkin-view') || 'q'; } catch (e) {}
+  setView(['q', 's', 'p'].includes(startView) ? startView : 'q');
+}
+</script>
+
+</body>
+</html>
