@@ -14,16 +14,17 @@
 :root {
   --bg: #f4f6f7; --surface: #ffffff; --ink: #14263a; --muted: #5a6b79; --line: #dbe2e6;
   --teal: #14566b; --teal-soft: #d7e8ec; --bar: #d0dfe4; --gold: #b07d1a; --gold-soft: #f6ead0;
+  --s-e: #14566b; --s-e-ink: #ffffff; --s-m: #a9cfd9; --s-m-ink: #0d3b49; --s-f: #f3c3ad; --s-f-ink: #6b2a10; --s-l: #c9572d; --s-l-ink: #ffffff;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0e1923; --surface: #15232f; --ink: #e5edf2; --muted: #9aacb9; --line: #263744;
-  --teal: #6cbccd; --teal-soft: #1d3a45; --bar: #284250; --gold: #e2b455; --gold-soft: #3a3020; color-scheme: dark } }
+  --teal: #6cbccd; --teal-soft: #1d3a45; --bar: #284250; --gold: #e2b455; --gold-soft: #3a3020; --s-e: #6cbccd; --s-e-ink: #0b2630; --s-m: #2c5664; --s-m-ink: #d7e8ec; --s-f: #5c3526; --s-f-ink: #f3d0c0; --s-l: #e07a50; --s-l-ink: #2a0f05; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0e1923; --surface: #15232f; --ink: #e5edf2; --muted: #9aacb9; --line: #263744;
-  --teal: #6cbccd; --teal-soft: #1d3a45; --bar: #284250; --gold: #e2b455; --gold-soft: #3a3020; color-scheme: dark }
+  --teal: #6cbccd; --teal-soft: #1d3a45; --bar: #284250; --gold: #e2b455; --gold-soft: #3a3020; --s-e: #6cbccd; --s-e-ink: #0b2630; --s-m: #2c5664; --s-m-ink: #d7e8ec; --s-f: #5c3526; --s-f-ink: #f3d0c0; --s-l: #e07a50; --s-l-ink: #2a0f05; color-scheme: dark }
 
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); }
@@ -106,6 +107,16 @@ th { font: 600 12px var(--body); letter-spacing: .04em; text-transform: uppercas
 td:first-child, th:first-child { text-align: left; }
 td.heat { font-family: var(--mono); font-size: 14px; }
 td.sum { font-weight: 600; color: var(--teal); }
+.stk-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 4px 0 12px; font-size: 13px; color: var(--muted); }
+.stk-key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.stk-key .tot { margin-left: auto; }
+.stk-row { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr) 40px; align-items: center; gap: 12px; margin: 0 0 9px; }
+.stk-name { font-size: 14px; line-height: 1.3; }
+.stk-bar { display: flex; gap: 2px; height: 24px; }
+.stk-bar span { display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: var(--mono); min-width: 0; }
+.stk-bar span:first-child { border-radius: 4px 0 0 4px; } .stk-bar span:last-child { border-radius: 0 4px 4px 0; }
+.stk-tot { font-family: var(--mono); font-size: 14px; font-weight: 600; text-align: right; }
+@media (max-width: 560px) { .stk-row { grid-template-columns: minmax(0, 1fr) 40px; } .stk-name { grid-column: 1 / -1; margin-bottom: -4px; } }
 
 .heard { margin: 14px 0 16px; padding-left: 22px; max-width: 75ch; display: grid; gap: 6px; }
 .heard li { padding-left: 2px; }
@@ -187,7 +198,7 @@ td.sum { font-weight: 600; color: var(--teal); }
 const PUBLIC = true;   // true on the student page: no answers are embedded there at all
 const DATA = [];
 const TH = {};
-const AGG = {"n": 25, "q": {"rem": {"bars": [["Compound interest, start early", 12], ["Debt and credit (cards, scores, interest)", 10], ["Budget rules and tracking spending", 8], ["Match the investment to your timeline", 6], ["Long-term, set-and-forget investing (index funds)", 6]]}, "design": {"bars": [["Keep it the way it is", 6], ["Short lecture, then the case", 6], ["More of the period on the case", 5], ["Group work and teamwork", 4], ["More interaction and discussion in lecture", 4]]}, "engaged": {"bars": [["Walk-to-the-sign timeline activity", 8], ["Live Robinhood / open-an-account demo", 5], ["Working the case in groups", 4], ["Vevox polls", 3], ["Chris's money box / candy business", 3]]}, "checked": {"bars": [["Never / can't think of one", 9], ["Long lecture stretches without examples or activities", 4], ["Fast, complex or data-heavy material", 3], ["Repetition: last-class review, familiar topics, slides read aloud", 3], ["Rainy day / not feeling well", 2]]}, "start": {"bars": [["Nothing new / keep doing what you're doing", 7], ["More group work, projects, hands-on activities", 6], ["More real-life examples", 3], ["Short practice quizzes", 2], ["Slower pace, help with new vocabulary", 2]]}, "stop": {"bars": [["Nothing", 14], ["Lecturing most of the period", 3], ["Repeating what most already get, last-class review", 3]]}, "keep": {"bars": [["Case studies", 7], ["Real-life examples and stories", 6], ["Everything / the teaching style", 4], ["Humor and personality", 3], ["Polls (including the hip-hop questions)", 3]]}, "change": {"bars": [["More class time, more case time in class", 8], ["More engaging, hands-on activities", 4], ["No change", 3], ["More group work", 2]]}, "helps": {"bars": [["Lectures", 16], ["Case studies", 12], ["Slides", 10], ["Participation and discussion", 6], ["Readings and supplemental material", 3]]}, "else": {}, "money": {"status": {"did": 15, "plan": 8, "none": 2}, "bars": [["Started or increased investing", 5], ["Built a budget or tracked spending", 4], ["More careful spending on wants", 4], ["Saving more", 3], ["Smarter credit card use (above the minimum, cash back)", 2]]}, "cases": {"bars": [["A lot", 18], ["Somewhat", 7], ["A little", 0], ["Not at all", 0]]}, "format": {"bars": [["Case woven through the lecture", 12], ["Lecture first, case at the end", 12], ["Watch at home, case in class", 1], ["Something else", 0]]}, "practice": {"bars": [["Case studies, like now", 14], ["A mix of cases and quizzes", 10], ["Quizzes", 0], ["Something else", 1]]}, "feedback": {"bars": [["Very helpful", 20], ["Somewhat helpful", 5], ["Not very helpful", 0], ["I don't usually read it", 0], ["Didn't know I was getting it", 0]]}, "polls": {"bars": [["Helpful and fun", 19], ["Helpful, not especially fun", 1], ["Fun, not especially helpful", 4], ["Neither", 1], ["Distracting", 0]]}, "pace": {"bars": [["Too slow", 0], ["About right", 21], ["Too fast", 4]]}, "length": {"bars": [["Too long", 0], ["About right", 15], ["Too short", 10]]}, "more": {"grid3": [["lecture", 1, 21, 3], ["hands-on activity", 0, 15, 10], ["class discussion", 1, 15, 9]]}, "topics": {"topics": [["Choosing and using financial services", 6, 13, 6, 0], ["Index vs. active investing", 8, 11, 3, 3], ["Investing in yourself", 11, 9, 5, 0], ["Credit scores and credit cards", 11, 10, 3, 1], ["Compound interest and investing basics", 12, 10, 3, 0], ["Car loans and home loans", 5, 18, 2, 0], ["Personal financial statements", 14, 9, 2, 0], ["Budgeting", 15, 10, 0, 0]]}}, "glance": [[25, "/30", "students answered"], [18, "/25", "say the cases help a lot"], [20, "/25", "find case feedback very helpful"], [21, "/25", "say the pace is about right"], [10, "/25", "say class is too short"], [19, "/25", "call the polls helpful and fun"]]};         // totals only, computed by build.py
+const AGG = {"n": 25, "q": {"rem": {"bars": [["Compound interest, start early", 12], ["Debt and credit (cards, scores, interest)", 10], ["Budget rules and tracking spending", 8], ["Match the investment to your timeline", 6], ["Long-term, set-and-forget investing (index funds)", 6]]}, "design": {"bars": [["Keep it the way it is", 6], ["Short lecture, then the case", 6], ["More of the period on the case", 5], ["Group work and teamwork", 4], ["More interaction and discussion in lecture", 4]]}, "engaged": {"bars": [["Walk-to-the-sign timeline activity", 8], ["Live Robinhood / open-an-account demo", 5], ["Working the case in groups", 4], ["Vevox polls", 3], ["Chris's money box / candy business", 3]]}, "checked": {"bars": [["Never / can't think of one", 9], ["Long lecture stretches without examples or activities", 4], ["Fast, complex or data-heavy material", 3], ["Repetition: last-class review, familiar topics, slides read aloud", 3], ["Rainy day / not feeling well", 2]]}, "start": {"bars": [["Nothing new / keep doing what you're doing", 7], ["More group work, projects, hands-on activities", 6], ["More real-life examples", 3], ["Short practice quizzes", 2], ["Slower pace, help with new vocabulary", 2]]}, "stop": {"bars": [["Nothing", 14], ["Lecturing most of the period", 3], ["Repeating what most already get, last-class review", 3]]}, "keep": {"bars": [["Case studies", 7], ["Real-life examples and stories", 6], ["Everything / the teaching style", 4], ["Humor and personality", 3], ["Polls (including the hip-hop questions)", 3]]}, "change": {"bars": [["More class time, more case time in class", 8], ["More engaging, hands-on activities", 4], ["No change", 3], ["More group work", 2]]}, "helps": {"bars": [["Lectures", 16], ["Case studies", 12], ["Slides", 10], ["Participation and discussion", 6], ["Readings and supplemental material", 3]]}, "else": {}, "money": {"status": {"did": 15, "plan": 8, "none": 2}, "bars": [["Started or increased investing", 5], ["Built a budget or tracked spending", 4], ["More careful spending on wants", 4], ["Saving more", 3], ["Smarter credit card use (above the minimum, cash back)", 2]]}, "cases": {"bars": [["A lot", 18], ["Somewhat", 7], ["A little", 0], ["Not at all", 0]]}, "format": {"bars": [["Case woven through the lecture", 12], ["Lecture first, case at the end", 12], ["Watch at home, case in class", 1], ["Something else", 0]]}, "practice": {"bars": [["Case studies, like now", 14], ["A mix of cases and quizzes", 10], ["Quizzes", 0], ["Something else", 1]]}, "feedback": {"bars": [["Very helpful", 20], ["Somewhat helpful", 5], ["Not very helpful", 0], ["I don't usually read it", 0], ["Didn't know I was getting it", 0]]}, "polls": {"bars": [["Helpful and fun", 19], ["Helpful, not especially fun", 1], ["Fun, not especially helpful", 4], ["Neither", 1], ["Distracting", 0]]}, "pace": {"bars": [["Too slow", 0], ["About right", 21], ["Too fast", 4]]}, "length": {"bars": [["Too long", 0], ["About right", 15], ["Too short", 10]]}, "more": {"grid3": [["lecture", 1, 21, 3], ["hands-on activity", 0, 15, 10], ["class discussion", 1, 15, 9]]}, "topics": {"topics": [["Budgeting", 15, 10, 0, 0], ["Personal financial statements", 14, 9, 2, 0], ["Choosing and using financial services", 6, 13, 6, 0], ["Credit scores and credit cards", 11, 10, 3, 1], ["Car loans and home loans", 5, 18, 2, 0], ["Compound interest and investing basics", 12, 10, 3, 0], ["Investing in yourself", 11, 9, 5, 0], ["Index vs. active investing", 8, 11, 3, 3]]}}, "glance": [[25, "/30", "students answered"], [18, "/25", "say the cases help a lot"], [20, "/25", "find case feedback very helpful"], [21, "/25", "say the pace is about right"], [10, "/25", "say class is too short"], [19, "/25", "call the polls helpful and fun"]]};         // totals only, computed by build.py
 const STU = {"design": ["The most common ask: a shorter lecture so more of the period goes to working the case, ideally in groups.", "Some of you want more interaction inside the lecture itself: quick questions, discussion, examples."], "start": ["One-off ideas worth trying: a guest speaker tied to a case, textbook page references on the slides, and homework challenges that push you to act."], "change": ["More engaging, hands-on activities, and more group work.", "Bigger ideas: a quarter-long simulation where everyone manages a made-up financial life, cases due a day or two after class, and a room set up for group work."], "else": ["Unfortunately, nobody said anything really mean."]};         // student-facing summary bullets
 const N = AGG.n;
 
@@ -326,11 +337,8 @@ function sectionHTML(q) {
   } else if (q.type === 'choice') {
     body += barsHTML(q.key, choiceRows(q), false);
   } else if (q.type === 'topics') {
-    const rows = TOPICS.map((name, i) => { const c = {}; SCALE.forEach(([k]) => c[k] = DATA.filter(d => d.topics[i] === k).length); return {name, c, weak: c.F + c.L}; })
-      .sort((a, b) => b.weak - a.weak || a.c.E - b.c.E);
-    body += `<div class="tablewrap"><table><thead><tr><th>Topic</th>${SCALE.map(s => `<th>${s[1]}</th>`).join('')}<th>Fuzzy + lost</th></tr></thead><tbody>` +
-      rows.map(r => `<tr><td>${esc(r.name)}</td>${SCALE.map(([k]) => `<td class="heat" style="background:color-mix(in srgb, ${k === 'E' || k === 'M' ? 'var(--teal)' : 'var(--gold)'} ${Math.round(r.c[k] / N * 55)}%, transparent)">${r.c[k]}</td>`).join('')}<td class="heat sum">${r.weak}</td></tr>`).join('') +
-      `</tbody></table></div><p class="scale-note">Sorted weakest first. Nobody chose "I missed this one."</p>`;
+    const rows = TOPICS.map((name, i) => [name, ...SCALE.map(([k]) => DATA.filter(d => d.topics[i] === k).length)]);
+    body += stackHTML(rows) + `<p class="scale-note">In the order the survey listed them. Nobody chose "I missed this one."</p>`;
   } else if (q.type === 'grid3') {
     body += `<div class="tablewrap"><table><thead><tr><th>In class</th>${LMS.map(l => `<th>${l[1]}</th>`).join('')}</tr></thead><tbody>` +
       GRID3.map(([name, i]) => `<tr><td>${esc(name)}</td>${LMS.map(([k]) => { const n = DATA.filter((_, r) => CH(r, i) === k).length; return `<td class="heat" style="background:color-mix(in srgb, var(--teal) ${Math.round(n / N * 55)}%, transparent)">${n}</td>`; }).join('')}</tr>`).join('') +
@@ -373,6 +381,11 @@ function pubBars(rows, highlight) {
       <span class="bbtn ${top.includes(label) ? 'top' : ''}"><span class="fill" style="width:${(n / N * 100).toFixed(1)}%"></span><span class="lbl">${esc(label)}</span></span>
       <span class="cnt">${n}</span><span></span></div>`).join('') + `</div>`;
 }
+function stackHTML(rows) {
+  const seg = (k, n, label) => n ? `<span style="flex:${n} 1 0;background:var(--s-${k});color:var(--s-${k}-ink)" title="${label}: ${n} of ${N}">${n >= 2 ? n : ''}</span>` : '';
+  return `<div class="stk-key">${SCALE.map(([k, l]) => `<span><i style="background:var(--s-${k.toLowerCase()})"></i>${l}</span>`).join('')}<span class="tot">Fuzzy + lost &rarr;</span></div>` +
+    rows.map(([name, E, M, F, L]) => `<div class="stk-row"><div class="stk-name">${esc(name)}</div><div class="stk-bar">${seg('e', E, SCALE[0][1])}${seg('m', M, SCALE[1][1])}${seg('f', F, SCALE[2][1])}${seg('l', L, SCALE[3][1])}</div><div class="stk-tot">${F + L}</div></div>`).join('');
+}
 function heat(n, color) { return `background:color-mix(in srgb, ${color} ${Math.round(n / N * 55)}%, transparent)`; }
 function sectionPub(q) {
   const a = AGG.q[q.key] || {}, bullets = STU[q.key] || [];
@@ -383,9 +396,7 @@ function sectionPub(q) {
   }
   if (a.bars) body += pubBars(a.bars, q.type === 'text');
   if (a.bars && q.type === 'text') body += `<p class="scale-note">${q.key === 'money' ? 'Things already done, by number of students. ' : 'Most common themes, by number of students. '}One answer can count toward more than one theme.</p>`;
-  if (a.topics) body += `<div class="tablewrap"><table><thead><tr><th>Topic</th>${SCALE.map(s => `<th>${s[1]}</th>`).join('')}<th>Fuzzy + lost</th></tr></thead><tbody>` +
-      a.topics.map(([name, E, M, F, L]) => `<tr><td>${esc(name)}</td><td class="heat" style="${heat(E, 'var(--teal)')}">${E}</td><td class="heat" style="${heat(M, 'var(--teal)')}">${M}</td><td class="heat" style="${heat(F, 'var(--gold)')}">${F}</td><td class="heat" style="${heat(L, 'var(--gold)')}">${L}</td><td class="heat sum">${F + L}</td></tr>`).join('') +
-      `</tbody></table></div>`;
+  if (a.topics) body += stackHTML(a.topics);
   if (a.grid3) body += `<div class="tablewrap"><table><thead><tr><th>In class</th>${LMS.map(l => `<th>${l[1]}</th>`).join('')}</tr></thead><tbody>` +
       a.grid3.map(([name, ...ns]) => `<tr><td>${esc(name)}</td>${ns.map(n => `<td class="heat" style="${heat(n, 'var(--teal)')}">${n}</td>`).join('')}</tr>`).join('') + `</tbody></table></div>`;
   return `${q.part ? `<div class="part">${esc(q.part)}</div>` : ''}
