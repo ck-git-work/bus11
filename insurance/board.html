@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Insurance game: scoreboard</title>
+<style>
+  :root {
+    --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #5B6475; --bg: #FFFFFF; --panel: #F3F6FA;
+    --border: #8A9AB5; --tint: #F6EFD9; --slate: #4A6FA5; --debt: #8C2F2F; --rh: 30px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--navy); font: 20px/1.3 Calibri, "Segoe UI", Helvetica, Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+  #top { background: var(--navy); color: #fff; padding: 0.5vh 1.4vw; display: flex; align-items: baseline; justify-content: space-between; gap: 2vw; flex: none; }
+  #top .phase { font: 700 clamp(22px, 2.6vw, 44px) Arial, Helvetica, sans-serif; }
+  #top .side { font-size: clamp(15px, 1.5vw, 26px); color: var(--lgold); text-align: right; }
+  #wait { flex: none; background: var(--tint); padding: 0.4vh 1.4vw; font-size: clamp(14px, 1.3vw, 22px); display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #wait.on { display: block; }
+  #view { flex: 1; min-height: 0; padding: 1vh 1.4vw; display: flex; flex-direction: column; }
+  #controls { flex: none; border-top: 1px solid #D5DBE5; background: var(--panel); padding: 6px 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 15px; }
+  #controls.viewer { display: none; }
+  #controls button { font: 15px Calibri, "Segoe UI", sans-serif; padding: 7px 12px; border-radius: 7px; border: 1px solid var(--navy); background: #fff; color: var(--navy); cursor: pointer; }
+  #controls button.go { background: var(--gold); border-color: var(--gold); font-weight: 700; font-size: 17px; padding: 8px 18px; }
+  #controls button.on { background: var(--navy); color: #fff; }
+  #controls button.warn { border-color: var(--debt); color: var(--debt); }
+  #controls .sep { width: 1px; align-self: stretch; background: #C5CCD8; margin: 0 4px; }
+  #controls input { font: 15px Calibri, sans-serif; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; min-width: 300px; }
+  #more { display: none; flex-basis: 100%; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #more.on { display: flex; }
+
+  /* lobby */
+  .lobby { display: flex; gap: 3vw; align-items: center; flex: 1; min-height: 0; }
+  .lobby .qr { flex: none; text-align: center; }
+  .lobby .qr img { width: min(34vw, 62vh); height: auto; image-rendering: pixelated; }
+  .lobby .url { font: 700 clamp(18px, 2.2vw, 38px) Arial, sans-serif; margin-top: 1vh; word-break: break-all; }
+  .lobby .names { flex: 1; align-self: stretch; display: flex; flex-direction: column; min-width: 0; }
+  .lobby h1 { font: 700 clamp(28px, 3.6vw, 60px) Arial, sans-serif; margin: 0 0 1vh; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.8vw; align-content: flex-start; overflow: hidden; }
+  .chip { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 0.3vh 1.1vw; font-size: clamp(18px, 2vw, 34px); }
+  .chip button { margin-left: 8px; border: none; background: none; color: var(--debt); font-size: 0.8em; cursor: pointer; }
+
+  /* leaderboard */
+  .lb { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .lb .rows { flex: 1; min-height: 0; overflow: hidden; }
+  .row { display: grid; grid-template-columns: 2.2em minmax(6em, 15%) 9.2em 1fr 7em 6.2em 6.2em; align-items: center; column-gap: 0.7em; height: var(--rh); font-size: calc(var(--rh) * 0.6); border-bottom: 1px solid #E3E8F0; white-space: nowrap; }
+  .row.head { font: 700 calc(var(--rh) * 0.46) Arial, sans-serif; color: var(--muted); border-bottom: 2px solid var(--navy); }
+  .row .rank { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .row .name { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+  .row.house .name { font-weight: 400; font-style: italic; }
+  .row .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .row .num.sav { font-weight: 700; }
+  .row .num.sm { color: var(--muted); }
+  .neg { color: var(--debt); }
+  .marks { display: flex; gap: 0.28em; align-items: center; }
+  .mk { width: 0.95em; height: 0.95em; border: 2px solid var(--navy); border-radius: 2px; position: relative; flex: none; }
+  .mk.b { background: var(--navy); }
+  .mk.b.auto { background: #9AA8C0; border-color: #9AA8C0; }
+  .mk.none { border-color: #C9D0DC; border-style: dotted; }
+  .mk.quiet { border: none; border-bottom: 2px solid #9AA8C0; border-radius: 0; height: 0.5em; }
+  .mk.hit::after { content: ""; position: absolute; right: -0.38em; top: -0.38em; width: 0.62em; height: 0.62em; background: var(--gold); border: 2px solid #fff; transform: rotate(45deg); }
+  .gap { width: 0.3em; flex: none; }
+  .row.head .hm { font-size: calc(var(--rh) * 0.6); }
+  .grp { flex: none; text-align: center; white-space: nowrap; font: 700 0.62em Arial, sans-serif; }
+  .bar { position: relative; height: 62%; background: var(--panel); border-radius: 3px; }
+  .bar .zero { position: absolute; top: -18%; bottom: -18%; width: 2px; background: var(--navy); }
+  .bar .fill { position: absolute; top: 0; bottom: 0; background: var(--slate); border-radius: 2px; }
+  .bar .fill.neg { background: var(--debt); }
+  .row.house .bar .fill { background: #9AA8C0; }
+  .row.house .bar .fill.neg { background: #C79A9A; }
+  .row .x { border: none; background: none; color: var(--debt); cursor: pointer; font-size: 0.8em; padding: 0 0.3em; }
+  .foot { flex: none; display: flex; justify-content: space-between; gap: 2vw; padding-top: 0.6vh; font-size: clamp(15px, 1.5vw, 26px); }
+  .foot b { font-variant-numeric: tabular-nums; }
+  .legend { color: var(--muted); display: flex; gap: 1.2em; align-items: center; font-size: 0.8em; }
+  .legend .mk { font-size: 0.9em; }
+
+  /* summary and question */
+  .sum { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1.4vh; font-size: clamp(18px, 2vw, 36px); overflow: hidden; }
+  .sum h1 { font: 700 clamp(26px, 3.2vw, 56px) Arial, sans-serif; margin: 0; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4vw; }
+  .cd { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.2vh 1.4vw; }
+  .cd .k { font: 700 0.62em Arial, sans-serif; color: var(--muted); letter-spacing: .04em; }
+  .cd .v { font: 700 1.5em Arial, sans-serif; font-variant-numeric: tabular-nums; }
+  .cd .who { font-weight: 700; }
+  .cd p { margin: 0.3vh 0; }
+  .three { grid-template-columns: 1fr 1fr 1fr; }
+  .qv { flex: 1; display: flex; flex-direction: column; gap: 2vh; min-height: 0; font-size: clamp(18px, 2vw, 36px); }
+  .qv h1 { font: 700 clamp(28px, 3.6vw, 62px) Arial, sans-serif; margin: 0; }
+  .qv .chip { font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); font-size: clamp(20px, 2.4vw, 40px); margin: auto; text-align: center; }
+</style>
+</head>
+<body>
+<div id="top"><div class="phase" id="phase">Insurance game</div><div class="side" id="side"></div></div>
+<div id="wait"></div>
+<div id="view"><div class="empty">Connecting…</div></div>
+<div id="controls" class="viewer"></div>
+
+<script type="module">
+import { CONFIG, N_DECADES, money, activePlayers, leaderboard, classTotals, dealDecade, freezePicks, picksFor, closedCount } from "./game.js";
+import { connect, randomId, sha256 } from "./net.js";
+
+const HOST_HASH = "c4e23f2dbd95f33dfc2aae690a970b1fcf347055d185a32c085ff84b4d96a184";
+const DEFAULT_PROMPT = "What's the most you would pay to not be the one?";
+const params = new URLSearchParams(location.search);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, prompt: DEFAULT_PROMPT, lastPhase: "" };
+let net, stopGame = null;
+
+start();
+async function start() {
+  const key = params.get("key");
+  B.host = !!key && (await sha256(key)) === HOST_HASH;
+  try { net = await connect(); } catch (e) { $("view").innerHTML = `<div class="empty">Couldn't reach the database. Check the connection and reload.</div>`; return; }
+  const fixed = params.get("g");
+  if (fixed) useGame(fixed); else net.on("current", (g) => useGame(g || null));
+  window.addEventListener("resize", render);
+}
+function useGame(g) {
+  if (stopGame) stopGame();
+  B.gameId = g; B.G = null;
+  if (!g) return render();
+  stopGame = net.on(`games/${g}`, (v) => { B.G = v; autoView(); render(); });
+}
+
+// ---------- reading the game ----------
+const G = () => B.G || {};
+const meta = () => G().meta || null;
+const state = () => ({ choices: G().choices || {}, results: G().results || {} });
+const players = () => G().players || {};
+function present(d) { return activePlayers(players()).filter((p) => (p.joinedDecade || 0) <= d); }
+function lockedIn(d) { return present(d).filter((p) => p.test || ((state().choices[p.id] || {})[d] || {}).locked); }
+function joinUrl() {
+  const u = new URL("index.html", location.href); u.search = params.get("g") ? "?g=" + params.get("g") : "";
+  return u.href.replace(/index\.html/, "");
+}
+function autoView() {
+  const m = meta(); const q = G().question;
+  const sig = (m ? m.phase + m.decade : "none") + "|" + (q ? q.state + q.id : "");
+  if (sig === B.lastPhase) return;
+  B.lastPhase = sig;
+  if (!m) return;
+  if (q && q.state === "open") B.view = "question";
+  else if (m.phase === "lobby") B.view = q && q.state === "closed" ? "question" : "lobby";
+  else B.view = "board";
+}
+
+// ---------- what Chris can do ----------
+const path = (p) => `games/${B.gameId}/${p}`;
+const act = {
+  async newGame() {
+    const id = params.get("g") || "g" + randomId(6);
+    await net.set(`games/${id}`, { meta: { phase: "lobby", decade: 0, createdAt: Date.now() } }); // replaces any old data under this id
+    if (!params.get("g")) await net.set("current", id);
+  },
+  openQuestion() { net.set(path("question"), { state: "open", id: Date.now(), prompt: B.prompt || DEFAULT_PROMPT }); },
+  closeQuestion() { net.update(path("question"), { state: "closed" }); },
+  hideQuestion() { net.update(path("question"), { state: "off" }); B.view = meta().phase === "lobby" ? "lobby" : "board"; render(); },
+  openDecade(d) {
+    const up = { "meta/phase": "open", "meta/decade": d };
+    if (G().question && G().question.state === "open") up["question/state"] = "closed";
+    net.update(`games/${B.gameId}`, up);
+  },
+  closeDecade() {
+    const d = meta().decade;
+    const up = {};
+    // Test players (added from "More") choose at random when the decade closes.
+    const choices = JSON.parse(JSON.stringify(state().choices));
+    present(d).filter((p) => p.test).forEach((p) => {
+      const picks = {};
+      CONFIG.decades[d].offers.forEach((o) => (picks[o.id] = Math.random() < 0.6));
+      choices[p.id] = choices[p.id] || {};
+      choices[p.id][d] = { picks, locked: true };
+      up[`choices/${p.id}/${d}`] = choices[p.id][d];
+    });
+    const hits = dealDecade(d, players(), choices, state().results);
+    // Store the choices that were dealt, so a late tap from an offline phone can't change this decade.
+    up[`results/${d}`] = { hits, picks: freezePicks(d, players(), choices), frozen: true, at: Date.now() };
+    up["meta/phase"] = "closed";
+    net.update(`games/${B.gameId}`, up);
+  },
+  skipDecade(d) { net.update(`games/${B.gameId}`, { [`results/${d}`]: { skipped: true, at: Date.now() }, "meta/phase": "closed", "meta/decade": d }); },
+  reopenDecade() { const d = meta().decade; net.update(`games/${B.gameId}`, { [`results/${d}`]: null, "meta/phase": "open" }); },
+  showFinal() { net.update(`games/${B.gameId}`, { "meta/phase": "final" }); },
+  backFromFinal() { net.update(`games/${B.gameId}`, { "meta/phase": "closed", "meta/decade": N_DECADES - 1 }); },
+  remove(pid) { net.update(path(`players/${pid}`), { removed: true }); },
+  addTest(n) {
+    const up = {}; const base = activePlayers(players()).filter((p) => p.test).length;
+    const d = closedCount(meta());
+    for (let i = 1; i <= n; i++) up[`players/t${randomId(6)}`] = { name: "Test " + (base + i), test: true, joinedAt: Date.now(), joinedDecade: meta().phase === "open" ? meta().decade : d };
+    net.update(`games/${B.gameId}`, up);
+  },
+  async wipe() {
+    await net.remove(`games/${B.gameId}`);
+    if (!params.get("g")) await net.set("current", null);
+  },
+};
+
+// ---------- drawing ----------
+function render() {
+  drawTop();
+  drawControls();
+  const m = meta();
+  const v = $("view");
+  if (!B.gameId || !m) { v.innerHTML = `<div class="empty">${B.host ? "No game yet. Press New game below." : "The game hasn't started yet."}</div>`; return; }
+  if (B.view === "lobby") v.innerHTML = lobbyHtml();
+  else if (B.view === "question") v.innerHTML = questionHtml();
+  else if (B.view === "summary") v.innerHTML = summaryHtml();
+  else { v.innerHTML = boardHtml(); sizeRows(); }
+}
+
+function drawTop() {
+  const m = meta();
+  const w = $("wait"); w.classList.remove("on");
+  if (!m) { $("phase").textContent = "Insurance game"; $("side").textContent = ""; return; }
+  const n = activePlayers(players()).length;
+  let phase = "Insurance game", side = `${n} player${n === 1 ? "" : "s"}`;
+  const dec = CONFIG.decades[m.decade];
+  if (m.phase === "lobby") phase = "Join the game";
+  else if (m.phase === "open") {
+    const all = present(m.decade), done = lockedIn(m.decade);
+    phase = `The ${dec.key} are open`;
+    side = `${done.length} of ${all.length} locked in`;
+    const doneIds = new Set(done.map((p) => p.id));
+    const left = all.filter((p) => !doneIds.has(p.id)).map((p) => p.name);
+    if (left.length && left.length <= 12) { w.textContent = "Still choosing: " + left.join(", "); w.classList.add("on"); }
+  } else if (m.phase === "closed") {
+    phase = (G().results || {})[m.decade] && G().results[m.decade].skipped ? `The ${dec.key} passed quietly` : `After the ${dec.key}: age ${dec.endAge}`;
+  } else if (m.phase === "final") phase = "Age 60: how it ended";
+  if (B.view === "question" && G().question) { const a = answers(); side = `${a.length} answer${a.length === 1 ? "" : "s"}`; }
+  $("phase").textContent = phase; $("side").textContent = side;
+}
+
+function lobbyHtml() {
+  const names = activePlayers(players()).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+  return `<div class="lobby">
+    <div class="qr"><img src="qr.png" alt="QR code to join" onerror="this.style.display='none'"><div class="url">${esc(joinUrl().replace(/^https?:\/\//, ""))}</div></div>
+    <div class="names"><h1>${names.length ? names.length + " in" : "Scan to join"}</h1>
+      <div class="chips">${names.map((p) => `<span class="chip">${esc(p.name)}${B.host && B.manage ? `<button data-act="remove" data-id="${p.id}" title="Remove">✕</button>` : ""}</span>`).join("")}</div>
+    </div></div>`;
+}
+
+function answers() {
+  const q = G().question; if (!q) return [];
+  const ok = new Set(activePlayers(players()).map((p) => p.id));
+  return Object.entries(G().answers || {}).filter(([id, a]) => a && a.q === q.id && ok.has(id)).map(([, a]) => a.v).sort((a, b) => a - b);
+}
+function median(a) { if (!a.length) return 0; const m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2); }
+function questionHtml() {
+  const q = G().question;
+  if (!q) return `<div class="empty">No question is open.</div>`;
+  const a = answers();
+  const showValues = q.state !== "open";
+  return `<div class="qv"><h1>${esc(q.prompt || "")}</h1>
+    ${showValues ? `<div class="cards three">
+        <div class="cd"><div class="k">LOWEST</div><div class="v">${a.length ? money(a[0]) : "–"}</div></div>
+        <div class="cd"><div class="k">MIDDLE ANSWER</div><div class="v">${a.length ? money(median(a)) : "–"}</div></div>
+        <div class="cd"><div class="k">HIGHEST</div><div class="v">${a.length ? money(a[a.length - 1]) : "–"}</div></div>
+      </div>
+      <div class="chips">${a.map((v) => `<span class="chip">${money(v)}</span>`).join("")}</div>`
+      : `<div class="empty">${a.length} answer${a.length === 1 ? "" : "s"} so far. Answers appear when the question closes.</div>`}
+  </div>`;
+}
+
+function markHtml(row) {
+  // One square per decision, in play order. Filled = bought, hollow = skipped.
+  let h = "";
+  CONFIG.decades.forEach((dec, d) => {
+    const r = row.decades[d];
+    dec.offers.forEach((o) => {
+      let c = "none";
+      if (r) {
+        if (r.status === "skipped") c = "quiet";
+        else if (r.noAnswer && r.noAnswer.includes(o.id)) c = "b auto";
+        else c = r.picks[o.id] === true ? "b" : "s";
+        if (r.events.some((e) => e.id === o.event.id && e.big)) c += " hit";
+      }
+      h += `<span class="mk ${c}"></span>`;
+    });
+    if (d < N_DECADES - 1) h += `<span class="gap"></span>`;
+  });
+  return h;
+}
+
+function boardHtml() {
+  const m = meta();
+  const closed = closedCount(m);
+  const board = leaderboard(players(), state(), closed);
+  const tot = classTotals(board);
+  const vals = board.map((r) => r.savings);
+  const lo = Math.min(0, ...vals), hi = Math.max(1, ...vals);
+  const span = hi - lo;
+  const zero = (-lo / span) * 100;
+  // Column heading for the squares: one label per decade, sitting over that decade's squares.
+  const groups = CONFIG.decades.map((dec, d) => `<span class="grp" style="width:${((dec.offers.length * 0.95 + (dec.offers.length - 1) * 0.28) / 0.62).toFixed(2)}em">${dec.key}</span>${d < N_DECADES - 1 ? `<span class="gap"></span>` : ""}`).join("");
+  const head = `<div class="row head"><div></div><div>Name</div><div class="marks hm">${groups}</div><div></div><div class="num">Savings</div><div class="num">Paid in</div><div class="num">Got back</div></div>`;
+  const rows = board.map((r, i) => {
+    const w = (Math.abs(r.savings) / span) * 100;
+    const left = r.savings < 0 ? zero - w : zero;
+    return `<div class="row${r.house ? " house" : ""}">
+      <div class="rank">${i + 1}</div>
+      <div class="name">${B.host && B.manage && !r.house ? `<button class="x" data-act="remove" data-id="${r.id}" title="Remove">✕</button>` : ""}${esc(r.name)}</div>
+      <div class="marks">${markHtml(r)}</div>
+      <div class="bar"><div class="fill${r.savings < 0 ? " neg" : ""}" style="left:${left}%;width:${w}%"></div><div class="zero" style="left:${zero}%"></div></div>
+      <div class="num sav${r.savings < 0 ? " neg" : ""}">${money(r.savings)}</div>
+      <div class="num sm">${money(r.paidIn)}</div>
+      <div class="num sm">${money(r.gotBack)}</div>
+    </div>`;
+  }).join("");
+  const keptText = tot.kept >= 0 ? `the insurance company kept <b>${money(tot.kept)}</b>` : `the insurance company paid out <b>${money(-tot.kept)}</b> more than it took in`;
+  return `<div class="lb"><div class="rows" id="rows">${head}${rows}</div>
+    <div class="foot"><span>Class total: paid in <b>${money(tot.paidIn)}</b>, got back <b>${money(tot.gotBack)}</b>, so ${keptText}.</span>
+    <span class="legend"><span class="mk b"></span>bought <span class="mk s"></span>skipped <span class="mk s hit"></span>&nbsp;disaster</span></div></div>`;
+}
+function sizeRows() {
+  const box = $("rows"); if (!box) return;
+  const n = box.children.length;
+  const rh = Math.max(16, Math.min(52, Math.floor(box.clientHeight / n)));
+  document.documentElement.style.setProperty("--rh", rh + "px");
+}
+
+function summaryHtml() {
+  const m = meta();
+  const closed = closedCount(m);
+  if (!closed) return `<div class="empty">The summary appears after the first decade closes.</div>`;
+  const d = Math.min(closed - 1, N_DECADES - 1);
+  const dec = CONFIG.decades[d];
+  const res = state().results[d] || {};
+  const board = leaderboard(players(), state(), closed);
+  const real = board.filter((r) => !r.house);
+  const tot = classTotals(board);
+  if (res.skipped) return `<div class="sum"><h1>The ${dec.key} passed quietly</h1><p>Nobody chose anything this decade, and everyone saved.</p></div>`;
+  let h = `<div class="sum"><h1>The ${dec.key}</h1>`;
+  dec.offers.forEach((o) => {
+    const ans = present(d).map((p) => picksFor(p, d, state().choices, state().results)[o.id]);
+    const bought = ans.filter((v) => v === true).length, skipped = ans.filter((v) => v === false).length, silent = ans.length - bought - skipped;
+    h += `<p><b>${esc(o.name)}:</b> ${bought} bought, ${skipped} skipped${silent ? `, ${silent} didn't choose` : ""}.</p>`;
+    if (!o.event.big) return;
+    const hitRows = board.filter((r) => r.decades[d] && r.decades[d].events.some((e) => e.id === o.event.id));
+    const card = (r) => {
+      if (!r) return "";
+      const e = r.decades[d].events.find((x) => x.id === o.event.id);
+      return `<div class="cd"><div class="k">${e.bought ? "BOUGHT IT" : "SKIPPED IT"}</div><p class="who">${esc(r.name)}</p>
+        <p>${e.bought ? `Cost them ${money(e.cost)}. The policy paid ${money(e.insurerPaid)}.` : `Cost them ${money(e.cost)}. Nobody else paid.`}</p>
+        <p>Savings at ${dec.endAge}: <b class="${r.decades[d].end < 0 ? "neg" : ""}">${money(r.decades[d].end)}</b></p></div>`;
+    };
+    h += `<p>${esc(o.event.text)}</p><div class="cards">${card(hitRows.find((r) => r.decades[d].events.find((x) => x.id === o.event.id).bought))}${card(hitRows.find((r) => !r.decades[d].events.find((x) => x.id === o.event.id).bought))}</div>`;
+  });
+  const top = real[0], bottom = real[real.length - 1];
+  h += `<div class="cards three">
+      <div class="cd"><div class="k">CLASS PAID IN</div><div class="v">${money(tot.paidIn)}</div></div>
+      <div class="cd"><div class="k">CLASS GOT BACK</div><div class="v">${money(tot.gotBack)}</div></div>
+      <div class="cd"><div class="k">${tot.kept >= 0 ? "INSURANCE COMPANY KEPT" : "COMPANY PAID OUT MORE BY"}</div><div class="v">${money(Math.abs(tot.kept))}</div></div>
+    </div>`;
+  if (top) h += `<p>Highest savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>.</p>`;
+  return h + `</div>`;
+}
+
+function drawControls() {
+  const c = $("controls");
+  if (!B.host) { c.className = "viewer"; return; }
+  c.className = "";
+  const m = meta();
+  const q = G().question;
+  let main = "";
+  if (!B.gameId || !m) main = `<button class="go" data-act="newGame">New game</button>`;
+  else if (m.phase === "lobby") main = `<button class="go" data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button>`;
+  else if (m.phase === "open") main = `<button class="go" data-act="close">Close the ${CONFIG.decades[m.decade].key}</button>`;
+  else if (m.phase === "closed") {
+    const next = m.decade + 1;
+    main = next < N_DECADES
+      ? `<button class="go" data-act="open" data-d="${next}">Open the ${CONFIG.decades[next].key}</button><button data-act="skip" data-d="${next}">Skip the ${CONFIG.decades[next].key}</button>`
+      : `<button class="go" data-act="final">Show the ending</button>`;
+  } else main = `<span>Game over.</span>`;
+  const views = !m ? "" : ["lobby", "board", "summary", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", summary: "Summary", question: "Question" }[v]}</button>`).join("");
+  let qb = "";
+  if (m) {
+    if (!q || q.state === "off") qb = `<button data-act="qopen">Open question</button>`;
+    else if (q.state === "open") qb = `<button data-act="qclose">Close question, show answers</button>`;
+    else qb = `<button data-act="qopen">Ask again</button><button data-act="qhide">Put question away</button>`;
+  }
+  const more = !m ? "" : `<div id="more" class="${B.more ? "on" : ""}">
+      <label>Question: <input id="prompt" value="${esc(B.prompt)}"></label>
+      <button data-act="manage" class="${B.manage ? "on" : ""}">Remove a player…</button>
+      ${m.phase === "lobby" ? `<button data-act="test">Add 10 test players</button>` : ""}
+      ${m.phase === "closed" ? `<button data-act="reopen">Reopen the ${CONFIG.decades[m.decade].key} (deal again)</button>` : ""}
+      ${m.phase === "final" ? `<button data-act="unfinal">Back to the last decade</button>` : ""}
+      <button class="warn" data-act="wipe">Delete this game's data</button>
+      <button data-act="newGame">New game</button>
+    </div>`;
+  const focusPrompt = document.activeElement && document.activeElement.id === "prompt";
+  if (focusPrompt) return; // don't redraw while Chris is typing the question
+  c.innerHTML = `${main}<span class="sep"></span>${views}<span class="sep"></span>${qb}${m ? `<span class="sep"></span><button data-act="more" class="${B.more ? "on" : ""}">More</button>` : ""}${more}`;
+}
+
+// A double-click must not run two steps. The gold button changes meaning the moment it is
+// pressed (Open becomes Close), so a second game-changing click within 1.5 seconds is ignored.
+// The question buttons are a separate group, so "close the question, then open the 20s" still works.
+const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", qopen: "question", qclose: "question", qhide: "question" };
+const lastStep = {};
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-act]");
+  if (!b || !B.host) return;
+  const a = b.dataset.act;
+  if (GROUPS[a]) {
+    if (Date.now() - (lastStep[GROUPS[a]] || 0) < 1500) return;
+    lastStep[GROUPS[a]] = Date.now();
+  }
+  if (a === "newGame") { if (!meta() || confirm("Start a new game? Players will need to join again.")) act.newGame(); }
+  else if (a === "open") act.openDecade(Number(b.dataset.d));
+  else if (a === "close") act.closeDecade();
+  else if (a === "skip") act.skipDecade(Number(b.dataset.d));
+  else if (a === "final") act.showFinal();
+  else if (a === "unfinal") act.backFromFinal();
+  else if (a === "reopen") act.reopenDecade();
+  else if (a === "view") { B.view = b.dataset.v; render(); }
+  else if (a === "qopen") act.openQuestion();
+  else if (a === "qclose") act.closeQuestion();
+  else if (a === "qhide") act.hideQuestion();
+  else if (a === "more") { B.more = !B.more; render(); }
+  else if (a === "manage") { B.manage = !B.manage; render(); }
+  else if (a === "test") act.addTest(10);
+  else if (a === "remove") act.remove(b.dataset.id);
+  else if (a === "wipe") { if (confirm("Delete all data for this game? This can't be undone.")) act.wipe(); }
+});
+document.addEventListener("input", (ev) => { if (ev.target.id === "prompt") B.prompt = ev.target.value; });
+document.addEventListener("focusout", (ev) => { if (ev.target.id === "prompt") setTimeout(render, 0); });
+</script>
+</body>
+</html>
