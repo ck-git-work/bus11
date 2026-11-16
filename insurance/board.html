@@ -44,7 +44,7 @@
   /* leaderboard */
   .lb { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .lb .rows { flex: 1; min-height: 0; overflow: hidden; }
-  .row { display: grid; grid-template-columns: 2.2em minmax(6em, 15%) 9.2em 1fr 7em 6.2em 6.2em; align-items: center; column-gap: 0.7em; height: var(--rh); font-size: calc(var(--rh) * 0.6); border-bottom: 1px solid #E3E8F0; white-space: nowrap; }
+  .row { display: grid; grid-template-columns: 2.2em minmax(6em, 17%) 9.2em 1fr 7em 6.2em 6.2em; align-items: center; column-gap: 0.7em; height: var(--rh); font-size: calc(var(--rh) * 0.6); border-bottom: 1px solid #E3E8F0; white-space: nowrap; }
   .row.head { font: 700 calc(var(--rh) * 0.46) Arial, sans-serif; color: var(--muted); border-bottom: 2px solid var(--navy); }
   .row .rank { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
   .row .name { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
@@ -69,6 +69,8 @@
   .bar .fill.neg { background: var(--debt); }
   .row.house .bar .fill { background: #9AA8C0; }
   .row.house .bar .fill.neg { background: #C79A9A; }
+  .row.mid { color: var(--muted); font-style: italic; background: var(--panel); }
+  .row.mid .between { grid-column: 2 / -1; }
   .row .x { border: none; background: none; color: var(--debt); cursor: pointer; font-size: 0.8em; padding: 0 0.3em; }
   .foot { flex: none; display: flex; justify-content: space-between; gap: 2vw; padding-top: 0.6vh; font-size: clamp(15px, 1.5vw, 26px); }
   .foot b { font-variant-numeric: tabular-nums; }
@@ -209,7 +211,7 @@ function render() {
   if (B.view === "lobby") v.innerHTML = lobbyHtml();
   else if (B.view === "question") v.innerHTML = questionHtml();
   else if (B.view === "summary") v.innerHTML = summaryHtml();
-  else { v.innerHTML = boardHtml(); sizeRows(); }
+  else { v.innerHTML = boardHtml(B.view === "tails"); sizeRows(); }
 }
 
 function drawTop() {
@@ -285,7 +287,8 @@ function markHtml(row) {
   return h;
 }
 
-function boardHtml() {
+// tails = true shows only the top and bottom rows, large, with one line for everyone in between.
+function boardHtml(tails) {
   const m = meta();
   const closed = closedCount(m);
   const board = leaderboard(players(), state(), closed);
@@ -297,7 +300,7 @@ function boardHtml() {
   // Column heading for the squares: one label per decade, sitting over that decade's squares.
   const groups = CONFIG.decades.map((dec, d) => `<span class="grp" style="width:${((dec.offers.length * 0.95 + (dec.offers.length - 1) * 0.28) / 0.62).toFixed(2)}em">${dec.key}</span>${d < N_DECADES - 1 ? `<span class="gap"></span>` : ""}`).join("");
   const head = `<div class="row head"><div></div><div>Name</div><div class="marks hm">${groups}</div><div></div><div class="num">Savings</div><div class="num">Paid in</div><div class="num">Got back</div></div>`;
-  const rows = board.map((r, i) => {
+  const one = (r, i) => {
     const w = (Math.abs(r.savings) / span) * 100;
     const left = r.savings < 0 ? zero - w : zero;
     return `<div class="row${r.house ? " house" : ""}">
@@ -309,7 +312,15 @@ function boardHtml() {
       <div class="num sm">${money(r.paidIn)}</div>
       <div class="num sm">${money(r.gotBack)}</div>
     </div>`;
-  }).join("");
+  };
+  const KEEP = 6;
+  let rows;
+  if (tails && board.length > KEEP * 2 + 1) {
+    const mid = board.slice(KEEP, board.length - KEEP);
+    rows = board.slice(0, KEEP).map(one).join("")
+      + `<div class="row mid"><div></div><div class="between">${mid.length} others, between ${money(mid[mid.length - 1].savings)} and ${money(mid[0].savings)}</div></div>`
+      + board.slice(board.length - KEEP).map((r, i) => one(r, board.length - KEEP + i)).join("");
+  } else rows = board.map(one).join("");
   const keptText = tot.kept >= 0 ? `the insurance company kept <b>${money(tot.kept)}</b>` : `the insurance company paid out <b>${money(-tot.kept)}</b> more than it took in`;
   return `<div class="lb"><div class="rows" id="rows">${head}${rows}</div>
     <div class="foot"><span>Class total: paid in <b>${money(tot.paidIn)}</b>, got back <b>${money(tot.gotBack)}</b>, so ${keptText}.</span>
@@ -318,7 +329,7 @@ function boardHtml() {
 function sizeRows() {
   const box = $("rows"); if (!box) return;
   const n = box.children.length;
-  const rh = Math.max(16, Math.min(52, Math.floor(box.clientHeight / n)));
+  const rh = Math.max(16, Math.min(68, Math.floor(box.clientHeight / n)));
   document.documentElement.style.setProperty("--rh", rh + "px");
 }
 
@@ -375,7 +386,7 @@ function drawControls() {
       ? `<button class="go" data-act="open" data-d="${next}">Open the ${CONFIG.decades[next].key}</button><button data-act="skip" data-d="${next}">Skip the ${CONFIG.decades[next].key}</button>`
       : `<button class="go" data-act="final">Show the ending</button>`;
   } else main = `<span>Game over.</span>`;
-  const views = !m ? "" : ["lobby", "board", "summary", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", summary: "Summary", question: "Question" }[v]}</button>`).join("");
+  const views = !m ? "" : ["lobby", "board", "tails", "summary", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", tails: "Top and bottom", summary: "Summary", question: "Question" }[v]}</button>`).join("");
   let qb = "";
   if (m) {
     if (!q || q.state === "off") qb = `<button data-act="qopen">Open question</button>`;
