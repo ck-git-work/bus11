@@ -14,9 +14,9 @@ export const CONFIG = {
 
   // Who sits on the board besides the students.
   house: [
-    { id: "house_buy", name: "House: buys all", policy: "buy" },
-    { id: "house_skip", name: "House: skips all", policy: "skip" },
-    { id: "house_skip2", name: "House: skips all 2", policy: "skip" },
+    { id: "house_buy", name: "Jordan", policy: "buy" }, // always buys
+    { id: "house_skip", name: "Stella", policy: "skip" }, // never buys, and is never hit
+    { id: "house_skip2", name: "Tessa", policy: "skip" }, // never buys
   ],
   houseBuyerId: "house_buy", // takes the buyer's disaster when no student bought
   houseSkipperId: "house_skip2", // takes the skipper's disaster when no student skipped
