@@ -8,6 +8,10 @@
 export const CONFIG = {
   years: 10, // each round is ten years
 
+  // true: each offer card states what the disaster costs with and without insurance.
+  // false: the card only describes what the insurance covers, in words, with no dollar figures.
+  showCosts: true,
+
   // Who sits on the board besides the students.
   house: [
     { id: "house_buy", name: "House: buys all", policy: "buy" },
@@ -33,6 +37,7 @@ export const CONFIG = {
           short: "Health",
           name: "Health insurance",
           premium: 3000,
+          plain: "Covers you if you have a serious accident or illness.",
           without: "Without it, a serious accident could cost $75,000.",
           withIt: "With it, your share would be about $10,000.",
           event: {
@@ -48,6 +53,7 @@ export const CONFIG = {
           short: "Phone",
           name: "Phone protection",
           premium: 150,
+          plain: "Covers a broken or lost phone.",
           without: "Without it, a broken phone costs about $800.",
           withIt: "With it, about $100.",
           event: {
@@ -76,6 +82,7 @@ export const CONFIG = {
           short: "Disability",
           name: "Disability insurance",
           premium: 1500,
+          plain: "Replaces part of your pay if you can't work.",
           without: "Without it, three years unable to work would cost $200,000 in lost pay.",
           withIt: "With it, you would still lose about $80,000.",
           event: {
@@ -103,6 +110,7 @@ export const CONFIG = {
           short: "Life",
           name: "Life insurance, on you and your partner",
           premium: 1200,
+          plain: "Pays your household if you or your partner dies.",
           without: "Without it, losing your partner would mean losing $500,000 of income.",
           withIt: "With it, the policy replaces that income.",
           event: {
@@ -130,6 +138,7 @@ export const CONFIG = {
           short: "Home",
           name: "Homeowners insurance",
           premium: 1500,
+          plain: "Pays to repair or rebuild your house.",
           without: "Without it, a house fire would cost $500,000.",
           withIt: "With it, your share would be about $5,000.",
           event: {

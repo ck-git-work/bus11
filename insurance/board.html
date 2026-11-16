@@ -18,6 +18,8 @@
   #top .side { font-size: clamp(15px, 1.5vw, 26px); color: var(--lgold); text-align: right; }
   #wait { flex: none; background: var(--tint); padding: 0.4vh 1.4vw; font-size: clamp(14px, 1.3vw, 22px); display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #wait.on { display: block; }
+  #off { flex: none; display: none; background: var(--debt); color: #fff; padding: 0.6vh 1.4vw; font-size: clamp(15px, 1.5vw, 26px); }
+  #off.on { display: block; }
   #view { flex: 1; min-height: 0; padding: 1vh 1.4vw; display: flex; flex-direction: column; }
   #controls { flex: none; border-top: 1px solid #D5DBE5; background: var(--panel); padding: 6px 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 15px; }
   #controls.viewer { display: none; }
@@ -95,6 +97,7 @@
 </head>
 <body>
 <div id="top"><div class="phase" id="phase">Insurance game</div><div class="side" id="side"></div></div>
+<div id="off">The scoreboard has lost its connection. Wait for this bar to clear before pressing a game button.</div>
 <div id="wait"></div>
 <div id="view"><div class="empty">Connecting…</div></div>
 <div id="controls" class="viewer"></div>
@@ -117,6 +120,14 @@ async function start() {
   const key = params.get("key");
   B.host = !!key && (await sha256(key)) === HOST_HASH;
   try { net = await connect(); } catch (e) { $("view").innerHTML = `<div class="empty">Couldn't reach the database. Check the connection and reload.</div>`; return; }
+  // Show a bar when the scoreboard itself is offline: a decade closed from a stale copy would
+  // freeze the wrong choices, so the game buttons are blocked until the connection is back.
+  let offTimer = null;
+  net.onConnection((ok) => {
+    clearTimeout(offTimer);
+    if (ok) { B.offline = false; $("off").classList.remove("on"); }
+    else offTimer = setTimeout(() => { B.offline = true; $("off").classList.add("on"); }, 2500);
+  });
   const fixed = params.get("g");
   if (fixed) useGame(fixed); else net.on("current", (g) => useGame(g || null));
   window.addEventListener("resize", render);
@@ -182,6 +193,7 @@ const act = {
     // Store the choices that were dealt, so a late tap from an offline phone can't change this decade.
     up[`results/${d}`] = { hits, picks: freezePicks(d, players(), choices), frozen: true, at: Date.now() };
     up["meta/phase"] = "closed";
+    if (G().question && G().question.state === "open") up["question/state"] = "closed";
     net.update(`games/${B.gameId}`, up);
   },
   skipDecade(d) { net.update(`games/${B.gameId}`, { [`results/${d}`]: { skipped: true, at: Date.now() }, "meta/phase": "closed", "meta/decade": d }); },
@@ -324,7 +336,7 @@ function boardHtml(tails) {
   const keptText = tot.kept >= 0 ? `the insurance company kept <b>${money(tot.kept)}</b>` : `the insurance company paid out <b>${money(-tot.kept)}</b> more than it took in`;
   return `<div class="lb"><div class="rows" id="rows">${head}${rows}</div>
     <div class="foot"><span>Class total: paid in <b>${money(tot.paidIn)}</b>, got back <b>${money(tot.gotBack)}</b>, so ${keptText}.</span>
-    <span class="legend"><span class="mk b"></span>bought <span class="mk s"></span>skipped <span class="mk s hit"></span>&nbsp;disaster</span></div></div>`;
+    <span class="legend"><span class="mk b"></span>bought <span class="mk s"></span>skipped <span class="mk s hit"></span>&nbsp;disaster <span class="mk b auto"></span>no choice, counted as bought</span></div></div>`;
 }
 function sizeRows() {
   const box = $("rows"); if (!box) return;
@@ -417,6 +429,7 @@ document.addEventListener("click", (ev) => {
   if (!b || !B.host) return;
   const a = b.dataset.act;
   if (GROUPS[a]) {
+    if (B.offline) return; // see the offline bar
     if (Date.now() - (lastStep[GROUPS[a]] || 0) < 1500) return;
     lastStep[GROUPS[a]] = Date.now();
   }
@@ -434,7 +447,7 @@ document.addEventListener("click", (ev) => {
   else if (a === "more") { B.more = !B.more; render(); }
   else if (a === "manage") { B.manage = !B.manage; render(); }
   else if (a === "test") act.addTest(10);
-  else if (a === "remove") act.remove(b.dataset.id);
+  else if (a === "remove") { const p = players()[b.dataset.id]; if (confirm("Remove " + (p ? p.name : "this player") + " from the game?")) act.remove(b.dataset.id); }
   else if (a === "wipe") { if (confirm("Delete all data for this game? This can't be undone.")) act.wipe(); }
 });
 document.addEventListener("input", (ev) => { if (ev.target.id === "prompt") B.prompt = ev.target.value; });

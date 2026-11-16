@@ -275,8 +275,7 @@ function decadeView(d) {
     <div class="card offer">
       <span class="price">${money(o.premium)} <small>a year</small></span>
       <h2>${esc(o.name)}</h2>
-      <p>${esc(o.without)}</p>
-      <p>${esc(o.withIt)}</p>
+      ${CONFIG.showCosts ? `<p>${esc(o.without)}</p><p>${esc(o.withIt)}</p>` : `<p>${esc(o.plain)}</p>`}
       <div class="seg">
         <button data-act="pick" data-d="${d}" data-o="${o.id}" data-v="1" class="${picks[o.id] === true ? "on" : ""}">Buy</button>
         <button data-act="pick" data-d="${d}" data-o="${o.id}" data-v="0" class="${picks[o.id] === false ? "on" : ""}">Skip</button>
@@ -309,7 +308,10 @@ function decadeLines(row) {
     h += `<tr class="sub"><td colspan="2">You joined later, so this decade counts as buying everything.</td></tr>`;
     return h;
   }
-  if (row.noAnswer && row.noAnswer.length) h += `<tr class="sub"><td colspan="2">You didn't choose in time, so this decade counts as buying ${row.noAnswer.length > 1 ? "everything" : "the insurance"}.</td></tr>`;
+  if (row.noAnswer && row.noAnswer.length) {
+    const names = CONFIG.decades[row.d].offers.filter((o) => row.noAnswer.includes(o.id)).map((o) => o.short.toLowerCase()).join(" and ");
+    h += `<tr class="sub"><td colspan="2">Your choice on ${esc(names)} didn't reach the game in time, so it counts as bought.</td></tr>`;
+  }
   if (!row.events.some((e) => e.big)) h += `<tr><td>Nothing big happened.</td><td></td></tr>`;
   row.events.forEach((e) => {
     h += `<tr><td>${esc(e.text)}</td><td class="neg">${e.cost ? signed(-e.cost) : "$0"}</td></tr>`;
@@ -341,9 +343,15 @@ function finalView() {
     if (r.status === "skipped") what = "A quiet decade";
     else if (r.status === "beforeJoin") what = "Before you joined";
     else {
-      const bought = dec.offers.filter((o) => r.picks[o.id] === true).map((o) => o.short);
+      const na = r.noAnswer || [];
+      const bought = dec.offers.filter((o) => r.picks[o.id] === true && !na.includes(o.id)).map((o) => o.short);
+      const silent = dec.offers.filter((o) => na.includes(o.id)).map((o) => o.short);
       const hit = r.events.filter((e) => e.big).map((e) => e.text);
-      what = (bought.length ? "Bought: " + bought.join(", ") : "Bought nothing") + (hit.length ? `<br><b>${esc(hit.join(" "))}</b>` : "");
+      const parts = [];
+      if (bought.length) parts.push("Bought: " + bought.join(", "));
+      else if (!silent.length) parts.push("Bought nothing");
+      if (silent.length) parts.push("No choice made: " + silent.join(", ") + " (counted as bought)");
+      what = parts.join("<br>") + (hit.length ? `<br><b>${esc(hit.join(" "))}</b>` : "");
     }
     return `<tr><td>${esc(dec.key)}</td><td>${what}</td><td${cls(r.end)}>${money(r.end)}</td></tr>`;
   }).join("");
