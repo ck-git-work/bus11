@@ -10,7 +10,7 @@ export const CONFIG = {
 
   // true: each offer card states what the disaster costs with and without insurance.
   // false: the card only describes what the insurance covers, in words, with no dollar figures.
-  showCosts: true,
+  showCosts: false,
 
   // Who sits on the board besides the students.
   house: [
