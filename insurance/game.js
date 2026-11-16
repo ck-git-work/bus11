@@ -12,6 +12,9 @@ export const CONFIG = {
   // false: the card only describes what the insurance covers, in words, with no dollar figures.
   showCosts: false,
 
+  // The dashed "goal" line Chris can switch on in the scoreboard's Distribution view.
+  goal: 250000,
+
   // Who sits on the board besides the students.
   house: [
     { id: "house_buy", name: "Jordan", policy: "buy" }, // always buys
@@ -26,11 +29,12 @@ export const CONFIG = {
       key: "20s",
       title: "Your 20s",
       endAge: 30,
-      intro: "Assume that, for some reason, you're no longer eligible for your parents' health insurance.",
+      intro: "Assume that you're 20 years old and you've just moved out and you're living on your own. You have a decent job that covers your taxes and living expenses, but your job doesn't provide health insurance, and you no longer qualify for your parents' health insurance due to a change in the law.",
       payLabel: "You make",
       make: 50000,
       living: 45000,
-      alreadyPaid: ["Car insurance (required by law)"],
+      // The paragraph between the pay numbers and the choices: what is already paid, then what is left to decide.
+      already: "Since car insurance is required by law, you already pay monthly to insure your driving. But you have a couple of other choices to make when it comes to insurance in your 20s.",
       offers: [
         {
           id: "health",
@@ -44,6 +48,9 @@ export const CONFIG = {
             id: "accident",
             big: true,
             text: "A serious accident: surgery and a week in the hospital.",
+            short: "Accident", // the word used on the scoreboard's column heading and row tags
+            bill: "The hospital bill", // first line of the receipt
+            ownNote: "their plan's out-of-pocket limit", // explains the insured person's share
             skipCost: 75000,
             boughtCost: 10000,
           },
@@ -61,6 +68,8 @@ export const CONFIG = {
             big: false,
             share: 0.5, // lands on this share of the class
             text: "Your phone broke.",
+            short: "Phone",
+            tally: "phones broke", // used on the summary: "11 phones broke."
             skipCost: 800,
             boughtCost: 100,
           },
@@ -71,24 +80,27 @@ export const CONFIG = {
       key: "30s",
       title: "Your 30s",
       endAge: 40,
-      intro: "You have a partner now, and the two of you bought a home. Health insurance comes through work.",
+      intro: "Welcome to your 30s, you have a partner now, and the two of you bought a home. Health insurance is now provided through your employer.",
       payLabel: "Together you make",
       make: 70000,
       living: 62000,
-      alreadyPaid: ["Car insurance (required by law)", "Homeowners insurance (required by your lender)"],
+      already: "Once again, car insurance is required by law, and you already pay for it monthly. Now that you're a homeowner, your lender requires homeowners insurance, which you also pay for. Both are included in taxes and living above. You have one other insurance decision to make in your 30s: would you like disability insurance or not?",
       offers: [
         {
           id: "disability",
           short: "Disability",
           name: "Disability insurance",
           premium: 1500,
-          plain: "Replaces part of your pay if you can't work.",
-          without: "Without it, three years unable to work would cost $200,000 in lost pay.",
+          plain: "Replaces part of your pay if an illness or injury keeps you from working.",
+          without: "Without it, five years unable to work would cost $200,000 in lost pay.",
           withIt: "With it, you would still lose about $80,000.",
           event: {
             id: "disability",
             big: true,
-            text: "You couldn't work for three years.",
+            text: "You couldn't work for five years.",
+            short: "Couldn't work",
+            bill: "Five years of lost pay",
+            paidNote: "60% of their pay",
             skipCost: 200000,
             boughtCost: 80000,
           },
@@ -99,24 +111,26 @@ export const CONFIG = {
       key: "40s",
       title: "Your 40s",
       endAge: 50,
-      intro: "Two kids now depend on the two of you.",
+      intro: "Welcome to your 40s, you're still partnered, but now you have two kids that depend on you.",
       payLabel: "Together you make",
       make: 90000,
       living: 78000,
-      alreadyPaid: ["Car insurance (required by law)", "Homeowners insurance (required by your lender)"],
+      already: "You still have health insurance through work. Car and homeowners insurance are still required, and you still pay for both. You have one other insurance choice to make in your 40s: do you want to purchase life insurance for you and your partner?",
       offers: [
         {
           id: "life",
           short: "Life",
-          name: "Life insurance, on you and your partner",
+          name: "Life insurance on you and your partner",
           premium: 1200,
-          plain: "Pays your household if you or your partner dies.",
+          plain: "Pays the surviving partner if either of you dies.",
           without: "Without it, losing your partner would mean losing $500,000 of income.",
           withIt: "With it, the policy replaces that income.",
           event: {
             id: "partner",
             big: true,
             text: "Your partner died. The household lost that income.",
+            short: "Partner died",
+            bill: "The income the household lost",
             skipCost: 500000,
             boughtCost: 0,
           },
@@ -127,24 +141,27 @@ export const CONFIG = {
       key: "50s",
       title: "Your 50s",
       endAge: 60,
-      intro: "The mortgage is paid off. For the first time, nobody makes you insure the house.",
+      intro: "Welcome to your 50s. Congratulations, your mortgage is paid off. And for the first time, nobody requires that you insure your house.",
       payLabel: "Together you make",
       make: 100000,
       living: 84000,
-      alreadyPaid: ["Car insurance (required by law)"],
+      already: "You still have health insurance through work. Car insurance is still required by law, and you still pay for it. You have another insurance choice to make in your 50s: do you want to continue to pay for homeowners insurance or not?",
       offers: [
         {
           id: "home",
           short: "Home",
           name: "Homeowners insurance",
           premium: 1500,
-          plain: "Pays to repair or rebuild your house.",
+          plain: "Pays to repair or rebuild your house after things like a fire, a storm, a burst pipe or a break-in.",
           without: "Without it, a house fire would cost $500,000.",
           withIt: "With it, your share would be about $5,000.",
           event: {
             id: "fire",
             big: true,
             text: "Your house burned down.",
+            short: "Fire",
+            bill: "The cost to rebuild",
+            ownNote: "the deductible",
             skipCost: 500000,
             boughtCost: 5000,
           },
@@ -282,7 +299,7 @@ export function scorePlayer(player, state, closed) {
         if (hits[o.event.id]) {
           const cost = bought ? o.event.boughtCost : o.event.skipCost;
           const insurerPaid = bought ? o.event.skipCost - o.event.boughtCost : 0;
-          row.events.push({ id: o.event.id, big: !!o.event.big, text: o.event.text, bought, cost, insurerPaid, fullCost: o.event.skipCost });
+          row.events.push({ id: o.event.id, big: !!o.event.big, text: o.event.text, short: o.event.short || "", bill: o.event.bill || "", paidNote: o.event.paidNote || "", ownNote: o.event.ownNote || "", bought, cost, insurerPaid, fullCost: o.event.skipCost });
           gotBack += insurerPaid;
         }
       });

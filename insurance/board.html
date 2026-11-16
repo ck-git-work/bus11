@@ -8,7 +8,7 @@
 <style>
   :root {
     --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #5B6475; --bg: #FFFFFF; --panel: #F3F6FA;
-    --border: #8A9AB5; --tint: #F6EFD9; --slate: #4A6FA5; --debt: #8C2F2F; --rh: 30px;
+    --border: #8A9AB5; --tint: #F6EFD9; --slate: #4A6FA5; --debt: #8C2F2F; --rh: 30px; --fs: 20px;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -46,8 +46,14 @@
   /* leaderboard */
   .lb { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .lb .rows { flex: 1; min-height: 0; overflow: hidden; }
-  .row { display: grid; grid-template-columns: 2.2em minmax(6em, 17%) 9.2em 1fr 7em 6.2em 6.2em; align-items: center; column-gap: 0.7em; height: var(--rh); font-size: calc(var(--rh) * 0.6); border-bottom: 1px solid #E3E8F0; white-space: nowrap; }
-  .row.head { font: 700 calc(var(--rh) * 0.46) Arial, sans-serif; color: var(--muted); border-bottom: 2px solid var(--navy); }
+  .row { display: grid; grid-template-columns: 2.2em minmax(6em, 17%) 13.2em 1fr 7em 6.2em 6.2em; align-items: center; column-gap: 0.7em; height: var(--rh); font-size: var(--fs); border-bottom: 1px solid #E3E8F0; white-space: nowrap; }
+  /* Top and bottom view: one more column that says what happened to the player. */
+  .row.tl { grid-template-columns: 2.2em minmax(6em, 1fr) 13.2em minmax(12em, 1.4fr) 7em 6.2em 6.2em; }
+  .row.head { height: calc(var(--rh) * 1.5); align-items: end; padding-bottom: 0.12em; color: var(--muted); border-bottom: 2px solid var(--navy); }
+  .row.head > div { font: 700 0.74em Arial, sans-serif; }
+  .row.head > div.marks { font: inherit; align-items: end; }
+  .row .tag { font-size: 0.8em; overflow: hidden; text-overflow: ellipsis; }
+  .npc { font-weight: 400; font-style: normal; color: var(--muted); font-size: 0.8em; }
   .row .rank { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
   .row .name { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
   .row.house .name { font-weight: 400; font-style: italic; }
@@ -55,16 +61,17 @@
   .row .num.sav { font-weight: 700; }
   .row .num.sm { color: var(--muted); }
   .neg { color: var(--debt); }
-  .marks { display: flex; gap: 0.28em; align-items: center; }
+  .marks { display: flex; gap: 0.4em; align-items: center; }
+  .grp { flex: none; width: 3em; display: flex; justify-content: center; align-items: center; gap: 0.5em; }
+  .grp.h { flex-direction: column; gap: 0; line-height: 1.05; color: var(--navy); }
+  .grp.h b { font: 700 0.86em Arial, sans-serif; }
+  .grp.h small { font: 400 0.46em Arial, sans-serif; color: var(--muted); }
   .mk { width: 0.95em; height: 0.95em; border: 2px solid var(--navy); border-radius: 2px; position: relative; flex: none; }
   .mk.b { background: var(--navy); }
   .mk.b.auto { background: #9AA8C0; border-color: #9AA8C0; }
   .mk.none { border-color: #C9D0DC; border-style: dotted; }
   .mk.quiet { border: none; border-bottom: 2px solid #9AA8C0; border-radius: 0; height: 0.5em; }
-  .mk.hit::after { content: ""; position: absolute; right: -0.38em; top: -0.38em; width: 0.62em; height: 0.62em; background: var(--gold); border: 2px solid #fff; transform: rotate(45deg); }
-  .gap { width: 0.3em; flex: none; }
-  .row.head .hm { font-size: calc(var(--rh) * 0.6); }
-  .grp { flex: none; text-align: center; white-space: nowrap; font: 700 0.62em Arial, sans-serif; }
+  .mk.hit { outline: 0.17em solid var(--gold); outline-offset: 0.1em; }
   .bar { position: relative; height: 62%; background: var(--panel); border-radius: 3px; }
   .bar .zero { position: absolute; top: -18%; bottom: -18%; width: 2px; background: var(--navy); }
   .bar .fill { position: absolute; top: 0; bottom: 0; background: var(--slate); border-radius: 2px; }
@@ -74,20 +81,33 @@
   .row.mid { color: var(--muted); font-style: italic; background: var(--panel); }
   .row.mid .between { grid-column: 2 / -1; }
   .row .x { border: none; background: none; color: var(--debt); cursor: pointer; font-size: 0.8em; padding: 0 0.3em; }
-  .foot { flex: none; display: flex; justify-content: space-between; gap: 2vw; padding-top: 0.6vh; font-size: clamp(15px, 1.5vw, 26px); }
+  .foot { flex: none; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4vh 2vw; padding-top: 0.6vh; font-size: clamp(15px, 1.5vw, 26px); }
   .foot b { font-variant-numeric: tabular-nums; }
-  .legend { color: var(--muted); display: flex; gap: 1.2em; align-items: center; font-size: 0.8em; }
+  .legend { color: var(--muted); display: flex; gap: 1.2em; align-items: center; font-size: 0.8em; white-space: nowrap; }
   .legend .mk { font-size: 0.9em; }
 
   /* summary and question */
-  .sum { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1.4vh; font-size: clamp(18px, 2vw, 36px); overflow: hidden; }
-  .sum h1 { font: 700 clamp(26px, 3.2vw, 56px) Arial, sans-serif; margin: 0; }
+  .sum { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1vh; font-size: clamp(15px, min(2vw, 3.2vh), 36px); overflow: hidden; }
+  .sum h1 { font: 700 1.5em Arial, sans-serif; margin: 0; }
+  .sum > p { margin: 0; }
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4vw; }
   .cd { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.2vh 1.4vw; }
   .cd .k { font: 700 0.62em Arial, sans-serif; color: var(--muted); letter-spacing: .04em; }
   .cd .v { font: 700 1.5em Arial, sans-serif; font-variant-numeric: tabular-nums; }
   .cd .who { font-weight: 700; }
   .cd p { margin: 0.3vh 0; }
+  .rc { width: 100%; border-collapse: collapse; font-size: 0.86em; margin: 0.4vh 0; }
+  .rc td { padding: 0.15vh 0; vertical-align: baseline; }
+  .rc td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: 0.6em; }
+  .rc tr.t td { border-top: 2px solid var(--navy); font-weight: 700; }
+  .rc .nt { font-weight: 400; color: var(--muted); font-size: 0.86em; }
+  .cd p.sm { font-size: 0.74em; color: var(--muted); }
+  /* distribution */
+  .spread { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .spread h1 { font: 700 clamp(22px, 2.6vw, 46px) Arial, sans-serif; margin: 0 0 0.4vh; flex: none; }
+  .spread .plot { flex: 1; min-height: 0; }
+  .spread svg { display: block; }
+  .spread text { font-family: Calibri, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--navy); }
   .three { grid-template-columns: 1fr 1fr 1fr; }
   .qv { flex: 1; display: flex; flex-direction: column; gap: 2vh; min-height: 0; font-size: clamp(18px, 2vw, 36px); }
   .qv h1 { font: 700 clamp(28px, 3.6vw, 62px) Arial, sans-serif; margin: 0; }
@@ -112,7 +132,7 @@ const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, prompt: DEFAULT_PROMPT, lastPhase: "" };
+const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, goal: false, prompt: DEFAULT_PROMPT, lastPhase: "" };
 let net, stopGame = null;
 
 start();
@@ -223,6 +243,7 @@ function render() {
   if (B.view === "lobby") v.innerHTML = lobbyHtml();
   else if (B.view === "question") v.innerHTML = questionHtml();
   else if (B.view === "summary") v.innerHTML = summaryHtml();
+  else if (B.view === "spread") { v.innerHTML = `<div class="spread"><h1 id="sph"></h1><div class="plot" id="plot"></div></div>`; drawSpread(); }
   else { v.innerHTML = boardHtml(B.view === "tails"); sizeRows(); }
 }
 
@@ -284,6 +305,7 @@ function markHtml(row) {
   let h = "";
   CONFIG.decades.forEach((dec, d) => {
     const r = row.decades[d];
+    h += `<span class="grp">`;
     dec.offers.forEach((o) => {
       let c = "none";
       if (r) {
@@ -294,10 +316,18 @@ function markHtml(row) {
       }
       h += `<span class="mk ${c}"></span>`;
     });
-    if (d < N_DECADES - 1) h += `<span class="gap"></span>`;
+    h += `</span>`;
   });
   return h;
 }
+
+// The big disaster that hit this row, if any: { short, bought }.
+function bigHit(row) {
+  for (const dr of row.decades) { const e = dr.events.find((x) => x.big); if (e) return e; }
+  return null;
+}
+function tagFor(row) { const e = bigHit(row); return e ? `${e.short}, ${e.bought ? "insured" : "no insurance"}` : ""; }
+const npc = (r) => (r.house ? ` <span class="npc">– NPC</span>` : "");
 
 // tails = true shows only the top and bottom rows, large, with one line for everyone in between.
 function boardHtml(tails) {
@@ -310,16 +340,22 @@ function boardHtml(tails) {
   const span = hi - lo;
   const zero = (-lo / span) * 100;
   // Column heading for the squares: one label per decade, sitting over that decade's squares.
-  const groups = CONFIG.decades.map((dec, d) => `<span class="grp" style="width:${((dec.offers.length * 0.95 + (dec.offers.length - 1) * 0.28) / 0.62).toFixed(2)}em">${dec.key}</span>${d < N_DECADES - 1 ? `<span class="gap"></span>` : ""}`).join("");
-  const head = `<div class="row head"><div></div><div>Name</div><div class="marks hm">${groups}</div><div></div><div class="num">Savings</div><div class="num">Paid in</div><div class="num">Got back</div></div>`;
+  // Once a decade has closed, its heading also names the disaster that was dealt in it.
+  const groups = CONFIG.decades.map((dec, d) => {
+    const big = dec.offers.find((o) => o.event.big);
+    const dealt = d < closed && !(state().results[d] || {}).skipped;
+    return `<span class="grp h"><b>${dec.key}</b><small>${dealt && big ? esc(big.event.short) : "&nbsp;"}</small></span>`;
+  }).join("");
+  const rc = tails ? "row tl" : "row";
+  const head = `<div class="${rc} head"><div></div><div>Name</div><div class="marks">${groups}</div>${tails ? `<div>What happened</div>` : `<div></div>`}<div class="num">Total savings</div><div class="num">Paid in</div><div class="num">Got back</div></div>`;
   const one = (r, i) => {
     const w = (Math.abs(r.savings) / span) * 100;
     const left = r.savings < 0 ? zero - w : zero;
-    return `<div class="row${r.house ? " house" : ""}">
+    return `<div class="${rc}${r.house ? " house" : ""}">
       <div class="rank">${i + 1}</div>
-      <div class="name">${B.host && B.manage && !r.house ? `<button class="x" data-act="remove" data-id="${r.id}" title="Remove">✕</button>` : ""}${esc(r.name)}</div>
+      <div class="name">${B.host && B.manage && !r.house ? `<button class="x" data-act="remove" data-id="${r.id}" title="Remove">✕</button>` : ""}${esc(r.name)}${npc(r)}</div>
       <div class="marks">${markHtml(r)}</div>
-      <div class="bar"><div class="fill${r.savings < 0 ? " neg" : ""}" style="left:${left}%;width:${w}%"></div><div class="zero" style="left:${zero}%"></div></div>
+      ${tails ? `<div class="tag">${esc(tagFor(r))}</div>` : `<div class="bar"><div class="fill${r.savings < 0 ? " neg" : ""}" style="left:${left}%;width:${w}%"></div><div class="zero" style="left:${zero}%"></div></div>`}
       <div class="num sav${r.savings < 0 ? " neg" : ""}">${money(r.savings)}</div>
       <div class="num sm">${money(r.paidIn)}</div>
       <div class="num sm">${money(r.gotBack)}</div>
@@ -330,19 +366,23 @@ function boardHtml(tails) {
   if (tails && board.length > KEEP * 2 + 1) {
     const mid = board.slice(KEEP, board.length - KEEP);
     rows = board.slice(0, KEEP).map(one).join("")
-      + `<div class="row mid"><div></div><div class="between">${mid.length} others, between ${money(mid[mid.length - 1].savings)} and ${money(mid[0].savings)}</div></div>`
+      + `<div class="${rc} mid"><div></div><div class="between">${mid.length} others, between ${money(mid[mid.length - 1].savings)} and ${money(mid[0].savings)}</div></div>`
       + board.slice(board.length - KEEP).map((r, i) => one(r, board.length - KEEP + i)).join("");
   } else rows = board.map(one).join("");
   const keptText = tot.kept >= 0 ? `the insurance company kept <b>${money(tot.kept)}</b>` : `the insurance company paid out <b>${money(-tot.kept)}</b> more than it took in`;
   return `<div class="lb"><div class="rows" id="rows">${head}${rows}</div>
     <div class="foot"><span>Class total: paid in <b>${money(tot.paidIn)}</b>, got back <b>${money(tot.gotBack)}</b>, so ${keptText}.</span>
-    <span class="legend"><span class="mk b"></span>bought <span class="mk s"></span>skipped <span class="mk s hit"></span>&nbsp;disaster <span class="mk b auto"></span>no choice, counted as bought</span></div></div>`;
+    <span class="legend"><span class="mk b"></span>bought <span class="mk s"></span>skipped <span class="mk s hit"></span>&nbsp;disaster <span class="mk b auto"></span>no choice (counts as bought)</span></div></div>`;
 }
 function sizeRows() {
   const box = $("rows"); if (!box) return;
   const n = box.children.length;
-  const rh = Math.max(16, Math.min(68, Math.floor(box.clientHeight / n)));
+  const rh = Math.max(16, Math.min(68, Math.floor(box.clientHeight / (n + 0.5)))); // the heading row is one and a half rows tall
+  // Text size follows the row height, but never so large that the columns stop fitting across the screen.
+  const emsAcross = B.view === "tails" ? 59 : 50;
+  const fs = Math.min(rh * 0.68, box.clientWidth / emsAcross);
   document.documentElement.style.setProperty("--rh", rh + "px");
+  document.documentElement.style.setProperty("--fs", fs.toFixed(1) + "px");
 }
 
 function summaryHtml() {
@@ -361,14 +401,24 @@ function summaryHtml() {
     const ans = present(d).map((p) => picksFor(p, d, state().choices, state().results)[o.id]);
     const bought = ans.filter((v) => v === true).length, skipped = ans.filter((v) => v === false).length, silent = ans.length - bought - skipped;
     h += `<p><b>${esc(o.name)}:</b> ${bought} bought, ${skipped} skipped${silent ? `, ${silent} didn't choose` : ""}.</p>`;
-    if (!o.event.big) return;
+    if (!o.event.big) {
+      const n = real.filter((r) => r.decades[d] && r.decades[d].events.some((e) => e.id === o.event.id)).length;
+      if (o.event.tally) h += `<p>${n} ${esc(o.event.tally)}. With protection it cost ${money(o.event.boughtCost)}. Without it, ${money(o.event.skipCost)}.</p>`;
+      return;
+    }
     const hitRows = board.filter((r) => r.decades[d] && r.decades[d].events.some((e) => e.id === o.event.id));
     const card = (r) => {
       if (!r) return "";
       const e = r.decades[d].events.find((x) => x.id === o.event.id);
-      return `<div class="cd"><div class="k">${e.bought ? "BOUGHT IT" : "SKIPPED IT"}</div><p class="who">${esc(r.name)}</p>
-        <p>${e.bought ? `Cost them ${money(e.cost)}. The policy paid ${money(e.insurerPaid)}.` : `Cost them ${money(e.cost)}. Nobody else paid.`}</p>
-        <p>Savings at ${dec.endAge}: <b class="${r.decades[d].end < 0 ? "neg" : ""}">${money(r.decades[d].end)}</b></p></div>`;
+      const note = (t) => (e.bought && t ? ` <span class="nt">(${esc(t)})</span>` : "");
+      return `<div class="cd"><div class="k">${e.bought ? "BOUGHT IT" : "SKIPPED IT"}</div><p class="who">${esc(r.name)}${npc(r)}</p>
+        <table class="rc">
+          <tr><td>${esc(e.bill)}</td><td>${money(e.fullCost)}</td></tr>
+          <tr><td>The policy paid${note(e.paidNote)}</td><td>${money(e.insurerPaid)}</td></tr>
+          <tr class="t"><td>From their own savings${note(e.ownNote)}</td><td>${money(e.cost)}</td></tr>
+        </table>
+        <p class="sm">Premiums they paid for it in their ${dec.key}: ${money(e.bought ? o.premium * CONFIG.years : 0)}</p>
+        <p>Total savings at ${dec.endAge}: <b class="${r.decades[d].end < 0 ? "neg" : ""}">${money(r.decades[d].end)}</b></p></div>`;
     };
     h += `<p>${esc(o.event.text)}</p><div class="cards">${card(hitRows.find((r) => r.decades[d].events.find((x) => x.id === o.event.id).bought))}${card(hitRows.find((r) => !r.decades[d].events.find((x) => x.id === o.event.id).bought))}</div>`;
   });
@@ -380,6 +430,75 @@ function summaryHtml() {
     </div>`;
   if (top) h += `<p>Highest savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>.</p>`;
   return h + `</div>`;
+}
+
+// One dot per player along a line of total savings. A dot sits at its exact amount and
+// stacks upward when it would overlap another. Dark red = below zero, grey = NPC,
+// gold ring = hit by a big disaster. Players below zero are named.
+function drawSpread() {
+  const m = meta(); const closed = closedCount(m);
+  const box = $("plot"); if (!box) return;
+  if (!closed) { $("sph").textContent = "Total savings"; box.innerHTML = `<div class="empty">The picture appears after the first decade closes.</div>`; return; }
+  const age = CONFIG.decades[Math.min(closed, N_DECADES) - 1].endAge;
+  $("sph").textContent = `Total savings at ${age}`;
+  const board = leaderboard(players(), state(), closed);
+  const W = Math.max(600, box.clientWidth), H = Math.max(300, box.clientHeight);
+  const f = Math.max(15, Math.min(30, W / 62));            // text size
+  let r = Math.max(8, Math.min(22, W / 80, H / 26));       // dot radius (made smaller below if a stack gets too tall)
+  const L = f * 3.2, R = f * 3.2, axisY = H - f * 3.2;
+  const vals = board.map((x) => x.savings);
+  let lo = Math.min(0, ...vals), hi = Math.max(1, ...vals);
+  if (B.goal) hi = Math.max(hi, CONFIG.goal);
+  const step = [25000, 50000, 100000, 200000, 250000, 500000].find((st) => (hi - lo) / st <= 9) || 1000000;
+  lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+  const x = (v) => L + ((v - lo) / (hi - lo)) * (W - L - R);
+  // place the dots; if the tallest stack would run off the top, shrink the dots and try again
+  let placed = [];
+  for (let attempt = 0; attempt < 12; attempt++) {
+    placed = [];
+    [...board].sort((a, b) => a.savings - b.savings).forEach((p) => {
+      const cx = x(p.savings); let level = 0;
+      while (placed.some((q) => q.level === level && Math.abs(q.cx - cx) < r * 2 + 3)) level++;
+      placed.push({ p, cx, level, cy: axisY - r - 8 - level * (r * 2 + 3) });
+    });
+    if (Math.min(...placed.map((q) => q.cy)) - r >= f * 3 || r <= 4) break;
+    r *= 0.85;
+  }
+  let g = "";
+  // axis and its labels
+  for (let v = lo; v <= hi + 1; v += step) {
+    g += `<line x1="${x(v)}" y1="${axisY}" x2="${x(v)}" y2="${axisY + f * 0.35}" stroke="#8A9AB5" stroke-width="2"/>`;
+    g += `<text x="${x(v)}" y="${axisY + f * 1.45}" text-anchor="middle" font-size="${f * 0.9}" ${v < 0 ? `style="fill:#8C2F2F"` : ""}>${money(v)}</text>`;
+  }
+  g += `<line x1="${L - r}" y1="${axisY}" x2="${W - R + r}" y2="${axisY}" stroke="#8A9AB5" stroke-width="2"/>`;
+  if (lo < 0) g += `<line x1="${x(0)}" y1="${f * 1.2}" x2="${x(0)}" y2="${axisY}" stroke="#1B2A49" stroke-width="3"/>`;
+  if (B.goal) {
+    const real = board.filter((p) => !p.house); const made = real.filter((p) => p.savings >= CONFIG.goal).length;
+    g += `<line x1="${x(CONFIG.goal)}" y1="${f * 1.2}" x2="${x(CONFIG.goal)}" y2="${axisY}" stroke="#C8972B" stroke-width="4" stroke-dasharray="${f * 0.5} ${f * 0.35}"/>`;
+    g += `<text x="${x(CONFIG.goal) - f * 0.4}" y="${f * 1.1}" text-anchor="end" font-size="${f}" font-weight="700" stroke="#fff" stroke-width="${f * 0.4}" stroke-linejoin="round" paint-order="stroke">Goal: ${money(CONFIG.goal)}</text>`;
+    g += `<text x="${x(CONFIG.goal) - f * 0.4}" y="${f * 2.3}" text-anchor="end" font-size="${f * 0.9}">${made} of ${real.length} reached it</text>`;
+  }
+  // the dots
+  placed.forEach((q) => {
+    const fill = q.p.savings < 0 ? "#8C2F2F" : q.p.house ? "#9AA8C0" : "#4A6FA5";
+    if (bigHit(q.p)) g += `<circle cx="${q.cx}" cy="${q.cy}" r="${r + 1}" fill="none" stroke="#C8972B" stroke-width="${Math.max(3, r * 0.32)}"/>`;
+    g += `<circle cx="${q.cx}" cy="${q.cy}" r="${r - Math.max(3, r * 0.32) / 2 - 1}" fill="${fill}"/>`;
+  });
+  // name everyone below zero, each on its own line above the dots so the labels can't collide
+  const under = placed.filter((q) => q.p.savings < 0).sort((a, b) => a.cx - b.cx);
+  const top = under.length ? Math.min(...under.map((q) => q.cy)) - r : 0;
+  under.forEach((q, i) => {
+    const ly = Math.max(f * 1.6, top - f * 1.2 - (under.length - 1 - i) * f * 1.5);
+    const tag = tagFor(q.p);
+    g += `<line x1="${q.cx}" y1="${q.cy - r - 3}" x2="${q.cx}" y2="${ly + f * 0.3}" stroke="#8C2F2F" stroke-width="1.5"/>`;
+    g += `<text x="${q.cx - f * 0.2}" y="${ly}" font-size="${f}" stroke="#fff" stroke-width="${f * 0.4}" stroke-linejoin="round" paint-order="stroke"><tspan font-weight="700">${esc(q.p.name)}</tspan><tspan style="fill:#8C2F2F" font-weight="700"> ${money(q.p.savings)}</tspan>${tag ? `<tspan style="fill:#5B6475">  ${esc(tag)}</tspan>` : ""}</text>`;
+  });
+  // legend
+  const ly = H - f * 0.5; const dot = (cx, fill, ring) => `${ring ? `<circle cx="${cx}" cy="${ly - f * 0.33}" r="${f * 0.42}" fill="none" stroke="#C8972B" stroke-width="3"/>` : ""}<circle cx="${cx}" cy="${ly - f * 0.33}" r="${f * 0.3}" fill="${fill}"/>`;
+  const items = [["#4A6FA5", false, "one player"], ["#8C2F2F", false, "below zero"], ["#9AA8C0", false, "NPC"], ["#4A6FA5", true, "hit by a disaster"]];
+  let lx = L;
+  items.forEach(([fill, ring, label]) => { g += dot(lx, fill, ring) + `<text x="${lx + f * 0.75}" y="${ly}" font-size="${f * 0.85}" style="fill:#5B6475">${label}</text>`; lx += f * (2.2 + label.length * 0.47); });
+  box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Each player's total savings as a dot on a line">${g}</svg>`;
 }
 
 function drawControls() {
@@ -398,7 +517,8 @@ function drawControls() {
       ? `<button class="go" data-act="open" data-d="${next}">Open the ${CONFIG.decades[next].key}</button><button data-act="skip" data-d="${next}">Skip the ${CONFIG.decades[next].key}</button>`
       : `<button class="go" data-act="final">Show the ending</button>`;
   } else main = `<span>Game over.</span>`;
-  const views = !m ? "" : ["lobby", "board", "tails", "summary", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", tails: "Top and bottom", summary: "Summary", question: "Question" }[v]}</button>`).join("");
+  const views = !m ? "" : ["lobby", "board", "tails", "spread", "summary", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
+    + (m && B.view === "spread" ? `<button data-act="goal" class="${B.goal ? "on" : ""}">Goal line</button>` : "");
   let qb = "";
   if (m) {
     if (!q || q.state === "off") qb = `<button data-act="qopen">Open question</button>`;
@@ -445,6 +565,7 @@ document.addEventListener("click", (ev) => {
   else if (a === "qclose") act.closeQuestion();
   else if (a === "qhide") act.hideQuestion();
   else if (a === "more") { B.more = !B.more; render(); }
+  else if (a === "goal") { B.goal = !B.goal; render(); }
   else if (a === "manage") { B.manage = !B.manage; render(); }
   else if (a === "test") act.addTest(10);
   else if (a === "remove") { const p = players()[b.dataset.id]; if (confirm("Remove " + (p ? p.name : "this player") + " from the game?")) act.remove(b.dataset.id); }

@@ -23,26 +23,29 @@
   h2 { font: 700 19px Arial, Helvetica, sans-serif; margin: 0 0 4px; }
   p { margin: 8px 0; }
   .muted { color: var(--muted); }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  .card { background: var(--card); border: 1px solid #DCE2EB; border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
   .nums { width: 100%; border-collapse: collapse; }
   .nums td { padding: 5px 0; vertical-align: baseline; }
   .nums td:last-child { text-align: right; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .nums tr.total td { border-top: 2px solid var(--navy); padding-top: 8px; font-weight: 700; font-size: 20px; }
-  .nums .sub td { padding-top: 0; font-size: 15px; color: var(--muted); font-weight: 400; text-align: left; }
+  .nums tr.total td { border-top: 1px solid #B9C3D3; padding-top: 9px; font-weight: 700; font-size: 20px; }
+  .nums .sub td { padding-top: 0; font-size: 15px; color: var(--muted); font-weight: 400; text-align: left; white-space: normal; }
   .neg { color: var(--debt); }
   .paid { font-size: 16px; color: var(--muted); margin: 10px 2px; }
-  .offer .price { float: right; font: 700 19px Arial, sans-serif; white-space: nowrap; margin-left: 10px; }
-  .offer .price small { font: 400 14px Calibri, sans-serif; color: var(--muted); }
-  .offer p { margin: 4px 0; font-size: 17px; }
+  .pre { margin: 16px 2px; }
+  .offer .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .offer .price { font: 700 19px Arial, sans-serif; white-space: nowrap; }
+  .offer .price small { font: 400 15px Calibri, sans-serif; color: var(--muted); }
+  .offer p { margin: 6px 0 0; font-size: 17px; color: var(--muted); }
   .seg { display: flex; gap: 10px; margin-top: 12px; }
   .seg button { flex: 1; }
-  button { font: 700 19px Arial, Helvetica, sans-serif; min-height: 54px; border-radius: 10px; border: 2px solid var(--navy); background: #fff; color: var(--navy); padding: 10px 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button { font: 700 19px Arial, Helvetica, sans-serif; min-height: 54px; border-radius: 10px; border: 1.5px solid var(--navy); background: #fff; color: var(--navy); padding: 10px 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   button.on { background: var(--navy); color: #fff; }
   button.primary { width: 100%; background: var(--gold); border-color: var(--gold); color: #1B2A49; margin-top: 6px; }
   button.primary:disabled { background: #D9DEE7; border-color: #D9DEE7; color: #7B8598; cursor: default; }
   button.plain { width: 100%; border-width: 1px; font-weight: 400; font-size: 17px; min-height: 46px; margin-top: 10px; }
-  .save { background: var(--tint); border-radius: 10px; padding: 12px 16px; margin: 14px 0 10px; font-size: 19px; display: flex; justify-content: space-between; gap: 10px; }
-  .save b { white-space: nowrap; }
+  .save { background: var(--tint); border-radius: 12px; padding: 12px 16px 14px; margin: 16px 0 10px; text-align: center; }
+  .save span { display: block; font-size: 17px; }
+  .save b { display: block; font: 700 28px/1.15 Arial, Helvetica, sans-serif; white-space: nowrap; font-variant-numeric: tabular-nums; }
   input[type=text] { width: 100%; font: 22px Calibri, "Segoe UI", sans-serif; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; color: var(--navy); margin: 8px 0 10px; }
   .big { font: 700 44px/1.05 Arial, Helvetica, sans-serif; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
   .msg { color: var(--debt); min-height: 1.4em; }
@@ -278,8 +281,7 @@ function decadeView(d) {
 
   const offers = dec.offers.map((o) => `
     <div class="card offer">
-      <span class="price">${money(o.premium)} <small>a year</small></span>
-      <h2>${esc(o.name)}</h2>
+      <div class="top"><h2>${esc(o.name)}</h2><span class="price">${money(o.premium)} <small>a year</small></span></div>
       ${CONFIG.showCosts ? `<p>${esc(o.without)}</p><p>${esc(o.withIt)}</p>` : `<p>${esc(o.plain)}</p>`}
       <div class="seg">
         <button data-act="pick" data-d="${d}" data-o="${o.id}" data-v="1" class="${picks[o.id] === true ? "on" : ""}">Buy</button>
@@ -289,13 +291,13 @@ function decadeView(d) {
 
   return [key, `<h1>${esc(dec.title)}</h1>
     <p>${esc(dec.intro)}</p>
-    ${d > 0 ? `<p class="muted">Savings so far: <b${cls(before)}>${money(before)}</b></p>` : ""}
+    ${d > 0 ? `<p class="muted">Total savings so far: <b${cls(before)}>${money(before)}</b></p>` : ""}
     <div class="card"><table class="nums">
       <tr><td>${esc(dec.payLabel)}</td><td>${money(dec.make)} a year</td></tr>
       <tr><td>Taxes and living</td><td>${money(dec.living)} a year</td></tr>
       <tr class="total"><td>You can save</td><td>${money(canSave(dec))} a year</td></tr>
     </table></div>
-    <p class="paid">Already paid: ${dec.alreadyPaid.map(esc).join("; ")}.</p>
+    <p class="pre">${esc(dec.already)}</p>
     ${offers}
     <div class="save"><span>With your choices you save</span><b>${money(yearly)} a year</b></div>
     <button class="primary" data-act="lock" data-d="${d}" ${allAnswered ? "" : "disabled"}>${allAnswered ? "Lock in" : "Choose Buy or Skip above"}</button>`];
@@ -320,7 +322,9 @@ function decadeLines(row) {
   if (!row.events.some((e) => e.big)) h += `<tr><td>Nothing big happened.</td><td></td></tr>`;
   row.events.forEach((e) => {
     h += `<tr><td>${esc(e.text)}</td><td class="neg">${e.cost ? signed(-e.cost) : "$0"}</td></tr>`;
-    h += `<tr class="sub"><td colspan="2">${e.bought ? `You were insured. The policy paid ${money(e.insurerPaid)}.` : `You weren't insured, so the whole cost is yours.`}</td></tr>`;
+    const bill = e.bill ? `${esc(e.bill)}: ${money(e.fullCost)}. ` : "";
+    const yours = e.cost ? ` and you paid ${money(e.cost)}${e.ownNote ? ` (${esc(e.ownNote.replace(/^their /, "your "))})` : ""}` : "";
+    h += `<tr class="sub"><td colspan="2">${bill}${e.bought ? `You were insured, so the policy paid ${money(e.insurerPaid)}${yours}.` : `You weren't insured, so the whole cost is yours.`}</td></tr>`;
   });
   return h;
 }
@@ -332,9 +336,9 @@ function resultView(d) {
   const key = `closed|${d}|${JSON.stringify(row)}|${sc.paidIn}|${sc.gotBack}`;
   return [key, `<h1>${esc(dec.title)} are over</h1>
     <div class="card"><table class="nums">
-      ${d > 0 ? `<tr><td>Savings at ${CONFIG.decades[d - 1].endAge}</td><td${cls(sc.decades[d - 1].end)}>${money(sc.decades[d - 1].end)}</td></tr>` : ""}
+      ${d > 0 ? `<tr><td>Total savings at ${CONFIG.decades[d - 1].endAge}</td><td${cls(sc.decades[d - 1].end)}>${money(sc.decades[d - 1].end)}</td></tr>` : ""}
       ${decadeLines(row)}
-      <tr class="total"><td>Savings at ${dec.endAge}</td><td${cls(sc.savings)}>${money(sc.savings)}</td></tr>
+      <tr class="total"><td>Total savings at ${dec.endAge}</td><td${cls(sc.savings)}>${money(sc.savings)}</td></tr>
     </table></div>
     <p class="paid">Paid for insurance so far: <b>${money(sc.paidIn)}</b>. Received: <b>${money(sc.gotBack)}</b>.</p>
     ${S.solo ? `<button class="primary" data-act="solonext">${d + 1 < N_DECADES ? "Next decade" : "See how it ended"}</button>` : `<p class="watch">Watch the screen.</p>`}`];
@@ -361,10 +365,10 @@ function finalView() {
     return `<tr><td>${esc(dec.key)}</td><td>${what}</td><td${cls(r.end)}>${money(r.end)}</td></tr>`;
   }).join("");
   return ["final|" + JSON.stringify(sc.decades.map((r) => r.end)), `<h1>You're 60</h1>
-    <p class="muted">Your savings</p>
+    <p class="muted">Your total savings</p>
     <div class="big${sc.savings < 0 ? " neg" : ""}">${money(sc.savings)}</div>
     <div class="card"><table class="hist">
-      <tr><th>Decade</th><th>What you did</th><th>Savings</th></tr>${rows}
+      <tr><th>Decade</th><th>What you did</th><th>Total savings</th></tr>${rows}
     </table></div>
     <div class="card"><table class="nums">
       <tr><td>You paid for insurance</td><td>${money(sc.paidIn)}</td></tr>
