@@ -63,12 +63,13 @@ import { CONFIG, N_DECADES, money, signed, canSave, yearlySaved, scorePlayer, de
 import { connect, randomId, sha256 } from "./net.js";
 
 const SOLO_HASH = "8df6181396a8bf3398b775734cbefc754e7aca2c8d019238ffa88db9356c4e5f";
+const UNLUCKY_HASH = "62d779f81f73e5c7402e32c7bab049bac69c7a440a623f493b3547ca697ac8d4"; // the instructor's demo link
 const params = new URLSearchParams(location.search);
 const app = document.getElementById("app");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // Everything the page knows. The screen is always redrawn from this.
-const S = { solo: false, ready: false, gameId: null, pid: null, meta: null, results: null, question: null, me: null, mine: null, answer: null, joinMsg: "", clash: null, editAnswer: false };
+const S = { solo: false, unlucky: false, ready: false, gameId: null, pid: null, meta: null, results: null, question: null, me: null, mine: null, answer: null, joinMsg: "", clash: null, editAnswer: false };
 let net = null;
 let stops = [];      // listeners on the game
 let mineStops = [];  // listeners on this player's own records
@@ -84,7 +85,11 @@ const pidKey = (g) => `bus11ins:${g}:pid`;
 start();
 async function start() {
   const soloKey = params.get("solo");
-  if (soloKey && (await sha256(soloKey)) === SOLO_HASH) return startSolo();
+  if (soloKey) {
+    const h = await sha256(soloKey);
+    if (h === SOLO_HASH) return startSolo(false);
+    if (h === UNLUCKY_HASH) return startSolo(true);
+  }
   try {
     net = await connect();
   } catch (e) {
@@ -169,8 +174,8 @@ function sendAnswer(n) {
 }
 
 // ---------- solo mode (the fallback: one phone, no scoreboard) ----------
-function startSolo() {
-  Object.assign(S, { solo: true, ready: true, gameId: "solo", pid: "solo", me: { name: "You", joinedDecade: 0 }, mine: {}, results: {}, meta: { phase: "open", decade: 0 } });
+function startSolo(unlucky) {
+  Object.assign(S, { solo: true, unlucky, ready: true, gameId: "solo", pid: "solo", me: { name: "You", joinedDecade: 0 }, mine: {}, results: {}, meta: { phase: "open", decade: 0 } });
   render();
 }
 function soloPick(d, offerId, value) {
@@ -180,7 +185,7 @@ function soloPick(d, offerId, value) {
 }
 function soloLock(d) {
   const hadBig = Object.entries(S.results).some(([k, r]) => CONFIG.decades[k].offers.some((o) => o.event.big && r.hits.solo && r.hits.solo[o.event.id]));
-  S.results[d] = { hits: { solo: dealSolo(d, S.mine[d].picks, hadBig) } };
+  S.results[d] = { hits: { solo: dealSolo(d, S.mine[d].picks, hadBig, Math.random, S.unlucky) } };
   S.meta = { phase: "closed", decade: d };
   render();
   window.scrollTo(0, 0);
@@ -200,7 +205,7 @@ function cls(n) { return n < 0 ? ' class="neg"' : ""; }
 let lastKey = "";
 function render() {
   const [key, html] = view();
-  document.getElementById("who").textContent = S.me && !S.solo ? S.me.name : "";
+  document.getElementById("who").textContent = S.solo ? (S.unlucky ? "Instructor demo" : "") : S.me ? S.me.name : "";
   if (key === lastKey) return;
   lastKey = key;
   app.innerHTML = html;

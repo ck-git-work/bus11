@@ -26,7 +26,7 @@ export const CONFIG = {
       key: "20s",
       title: "Your 20s",
       endAge: 30,
-      intro: "You're 26. You just aged off your parents' health plan.",
+      intro: "Assume that, for some reason, you're no longer eligible for your parents' health insurance.",
       payLabel: "You make",
       make: 50000,
       living: 45000,
@@ -377,10 +377,16 @@ export function dealDecade(d, players, choices, results, rng = Math.random) {
 }
 
 // Solo mode: one phone on its own, no scoreboard. Odds are turned up the same way.
-export function dealSolo(d, picks, alreadyHadBig, rng = Math.random) {
+// With unlucky = true (the instructor's demo link) nothing is left to chance for the big
+// disasters: the first big insurance you skip is the one that hits, and no other big one does.
+export function dealSolo(d, picks, alreadyHadBig, rng = Math.random, unlucky = false) {
   const dec = CONFIG.decades[d];
   const mine = {};
   dec.offers.forEach((o) => {
+    if (unlucky && o.event.big) {
+      if (!alreadyHadBig && picks[o.id] === false) mine[o.event.id] = true;
+      return;
+    }
     const chance = o.event.big ? (alreadyHadBig ? 0 : 0.12) : o.event.share || 0.5;
     if (rng() < chance) mine[o.event.id] = true;
   });
