@@ -40,14 +40,23 @@ export const CONFIG = {
     hold2: "Hold up your phones. Who was it this time?",
     // The outcome screen: this heading over a table of what is left of each nest egg, without and with insurance.
     outcome: "The same tragedy struck our class, but with a very different outcome.",
-    // The takeaway screen. The definition is a DRAFT until Chris settles it; the terms are his.
+    // The takeaway screen: two definitions and the key terms (settled with Chris, 11/16).
     takeaway: "Congratulations, you just invented insurance.",
     definition: "Insurance: you pay a small, certain fee so that someone else pays if a large, uncertain loss happens to you.",
+    definition2: "Or, alternatively, an arrangement where many people each pay a little so that no one of them loses a lot.",
     terms: [
       ["Policy", "an insurance contract"],
       ["Policyholder", "the buyer of insurance"],
+      ["Premium", "the fee you pay for a policy"],
       ["Coverage", "the protection provided by a policy"],
-      ["Insured", "the person who bought insurance"],
+      ["Insured", "the person the policy protects"],
+    ],
+    // The last screen before the 20s: a PLACEHOLDER to remind Chris to introduce the game. First line is the heading.
+    intro: [
+      "[Game intro: placeholder]",
+      "We're going to play a game.",
+      "After each decade, a scoreboard shows everyone's net worth.",
+      "The goal is whatever you decide.",
     ],
     margin: 0.2, // the "even split plus" button adds this much on top of the even split
     prompt: "What would you pay Chris to guarantee that you can keep your $50,000 nest egg even if the bad thing happens to you?", // on the phones and over the answers

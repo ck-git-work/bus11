@@ -135,7 +135,7 @@
   .scene .cmp th:first-child, .scene .cmp td:first-child { text-align: left; padding-left: 0; }
   .scene .cmp tr.t td { border-top: 2px solid var(--navy); font-weight: 700; }
   .scene .cmp .neg { color: var(--debt); }
-  .scene .def { font-size: 1.12em; }
+  .scene .def { font-size: 1.05em; }
   .scene .terms { border-collapse: collapse; font-size: 0.82em; }
   .scene .terms td { padding: 0.5vh 1.4em 0.5vh 0; vertical-align: baseline; }
   .scene .terms td:first-child { font-weight: 700; white-space: nowrap; }
@@ -238,6 +238,8 @@ function sceneHtml() {
   if (sc.state === "setup") return `<div class="scene"><p>${esc(C.setup)}</p><p class="b">${esc(C.warning)}</p></div>`;
   // 3. The proposal, before the question opens.
   if (sc.state === "offer") return `<div class="scene"><h1>${esc(C.offer[0])}</h1><p>${esc(C.offer[1])}</p><p class="b">${esc(C.offer[2])}</p></div>`;
+  // 8. The game intro, the last screen before the 20s.
+  if (sc.state === "intro") return `<div class="scene"><h1>${esc(C.intro[0])}</h1>${C.intro.slice(1).map((l) => `<p>${esc(l)}</p>`).join("")}</div>`;
   const who = (players()[sc.pid] || {}).name || "";
   const name = B.showName ? `<p class="who">It was <b>${esc(who)}</b>.</p>` : "";
   if (sc.round === 2 && sc.state === "outcome") {
@@ -254,7 +256,7 @@ function sceneHtml() {
       </table></div>`;
   }
   // 7. The takeaway: a definition and the key terms.
-  if (sc.round === 2 && sc.state === "takeaway") return `<div class="scene"><h1>${esc(C.takeaway)}</h1><p class="def">${esc(C.definition)}</p>
+  if (sc.round === 2 && sc.state === "takeaway") return `<div class="scene"><h1>${esc(C.takeaway)}</h1><p class="def">${esc(C.definition)}</p><p class="def">${esc(C.definition2)}</p>
       <table class="terms">${C.terms.map(([t, d]) => `<tr><td>${esc(t)}</td><td>${esc(d)}</td></tr>`).join("")}</table></div>`;
   // 5. The round 2 draw: only the phones line. The numbers wait for the outcome screen.
   if (sc.round === 2) return `<div class="scene"><h1>${esc(C.again)}</h1><p>${esc(C.hold2)}</p>${name}</div>`;
@@ -683,7 +685,8 @@ function drawControls() {
         <button data-act="split" class="${B.split ? "on" : ""}">Show the even split</button><button data-act="qopen">Ask again</button>`;
     } else if (sc.state === "revealed") main = `<button class="go" data-act="outcome">Show the outcome</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw2again">Draw round 2 again</button>`;
     else if (sc.state === "outcome") main = `<button class="go" data-act="takeaway">Show the takeaway</button><button data-act="phones2">Back to the phones</button>`;
-    else main = `<button class="go" data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button><button data-act="outcome">Back to the outcome</button>`;
+    else if (sc.state === "takeaway") main = `<button class="go" data-act="intro">Show the game intro</button><button data-act="outcome">Back to the outcome</button>`;
+    else main = `<button class="go" data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button><button data-act="takeaway">Back to the takeaway</button>`;
   }
   else if (m.phase === "open") main = `<button class="go" data-act="close">Close the ${CONFIG.decades[m.decade].key}</button>`;
   else if (m.phase === "closed") {
@@ -700,7 +703,7 @@ function drawControls() {
       ${m.phase === "lobby" ? `<label>Question: <input id="prompt" value="${esc(B.prompt)}"></label>` : ""}
       <button data-act="manage" class="${B.manage ? "on" : ""}">Remove a player…</button>
       ${m.phase === "lobby" ? `<button data-act="test">Add 10 test players</button>` : ""}
-      ${m.phase === "lobby" && scene() && scene().state !== "takeaway" ? `<button data-act="open" data-d="0" data-confirm="Leave the opening scene now and open the ${CONFIG.decades[0].key}?">Leave the scene: open the ${CONFIG.decades[0].key}</button>` : ""}
+      ${m.phase === "lobby" && scene() && scene().state !== "intro" ? `<button data-act="open" data-d="0" data-confirm="Leave the opening scene now and open the ${CONFIG.decades[0].key}?">Leave the scene: open the ${CONFIG.decades[0].key}</button>` : ""}
       ${m.phase === "closed" ? `<button data-act="reopen">Reopen the ${CONFIG.decades[m.decade].key} (deal again)</button>` : ""}
       ${m.phase === "final" ? `<button data-act="unfinal">Back to the last decade</button>` : ""}
       <button class="warn" data-act="wipe">Delete this game's data</button>
@@ -716,7 +719,7 @@ function drawControls() {
 // A double-click must not run two steps. The gold button changes meaning the moment it is
 // pressed (Open becomes Close), so a second game-changing click within 1.5 seconds is ignored.
 // The question buttons are a separate group, so "close the question, then open the 20s" still works.
-const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", setup: "game", draw1: "game", draw2: "game", draw2mid: "game", draw2fair: "game", draw2again: "game", offer: "game", outcome: "game", takeaway: "game", phones2: "game", qopen: "question", qclose: "question", qhide: "question" };
+const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", setup: "game", draw1: "game", draw2: "game", draw2mid: "game", draw2fair: "game", draw2again: "game", offer: "game", outcome: "game", takeaway: "game", intro: "game", phones2: "game", qopen: "question", qclose: "question", qhide: "question" };
 const lastStep = {};
 document.addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-act]");
@@ -742,7 +745,7 @@ document.addEventListener("click", (ev) => {
   else if (a === "more") { B.more = !B.more; render(); }
   else if (a === "goal") { B.goal = !B.goal; render(); }
   else if (a === "setup") act.sceneSetup();
-  else if (a === "offer" || a === "outcome" || a === "takeaway") act.sceneStep(a);
+  else if (a === "offer" || a === "outcome" || a === "takeaway" || a === "intro") act.sceneStep(a);
   else if (a === "phones2") act.sceneStep("revealed");
   else if (a === "draw1") act.drawScene(1);
   else if (a === "draw2") act.drawScene(2, currentPrice());
