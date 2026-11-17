@@ -19,9 +19,13 @@ export const CONFIG = {
   // one person loses all of it, and the class is asked what it would pay not to be that person.
   scene: {
     stake: 50000, // what everyone has, and what the accident costs
+    // The framing, shown on the scoreboard and on every phone before the first draw (Chris's words).
+    setup: "You've worked your entire life and have managed to save $50,000. It's everything you have.",
+    warning: "Something bad is about to happen to one of you. Nobody knows who.", // under the framing, on the scoreboard
     // The disaster is left unnamed on purpose: Chris names the possibilities aloud.
     disaster: "Something bad happened, and it cost you $50,000.", // on the unlucky phone
-    board: "Something bad just happened to one of you, and it cost $50,000: everything they have.", // on the scoreboard, round 1
+    headline: "Something bad just happened to one of you.", // on the scoreboard, round 1
+    board: "It cost $50,000: everything they have.", // under that headline
     again: "Same bad luck.", // starts the scoreboard's round 2 headline
     margin: 0.2, // the "even split plus" button adds this much on top of the even split
     prompt: "What would you pay to guarantee you won't be out the $50,000?",

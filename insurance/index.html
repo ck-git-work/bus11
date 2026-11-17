@@ -54,6 +54,7 @@
   .fill { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px; color: #fff; }
   .fill.good { background: #1E7A46; }
   .fill.bad { background: #B3261E; }
+  .fill.setup { background: var(--navy); }
   .fill .bigword { font: 700 60px/1.05 Arial, Helvetica, sans-serif; margin-bottom: 14px; }
   .fill p { font-size: 23px; margin: 8px 0; }
   .fill .hold { font-size: 18px; opacity: 0.85; margin-top: 30px; }
@@ -232,6 +233,7 @@ function view() {
     if (q && q.state === "open") return questionView(q);
   }
   const m = S.meta;
+  if (m.phase === "lobby" && S.scene && S.scene.state === "setup") return ["setup|" + S.scene.id, `<div class="fill setup"><div class="bigword">${money(CONFIG.scene.stake)}</div><p>${esc(CONFIG.scene.setup)}</p><p class="hold">Watch the screen.</p></div>`];
   if (m.phase === "lobby" && S.scene && S.scene.state === "revealed" && S.scene.pid) return sceneView(S.scene);
   if (m.phase === "lobby") return ["lobby|" + (S.answer ? S.answer.v : ""), `<h1>You're in, ${esc(S.me.name)}.</h1><p>Watch the screen. The game starts soon.</p>`];
   if (m.phase === "open") {

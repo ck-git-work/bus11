@@ -199,7 +199,7 @@ function autoView() {
   B.lastPhase = sig;
   if (!m) return;
   if (q && q.state === "open") B.view = "question";
-  else if (m.phase === "lobby") B.view = sc && sc.state === "revealed" ? "scene" : q && q.state === "closed" ? "question" : "lobby";
+  else if (m.phase === "lobby") B.view = sc && (sc.state === "revealed" || sc.state === "setup") ? "scene" : q && q.state === "closed" ? "question" : "lobby";
   else B.view = "board";
 }
 
@@ -223,6 +223,7 @@ function sceneHtml() {
   const sc = scene();
   if (!sc) return `<div class="empty">The opening scene hasn't started.</div>`;
   const stake = CONFIG.scene.stake;
+  if (sc.state === "setup") return `<div class="scene"><h1>${esc(CONFIG.scene.setup)}</h1><p>${esc(CONFIG.scene.warning)}</p></div>`;
   const who = (players()[sc.pid] || {}).name || "";
   const name = B.showName ? `<p class="who">It was <b>${esc(who)}</b>.</p>` : "";
   if (sc.round === 2) {
@@ -235,7 +236,7 @@ function sceneHtml() {
       </table>
       <p>Hold up your phones. Who was it this time?</p>${name}</div>`;
   }
-  return `<div class="scene"><h1>Everyone here has ${money(stake)}.</h1><p>${esc(CONFIG.scene.board)}</p><p>Hold up your phones. Who was it?</p>${name}</div>`;
+  return `<div class="scene"><h1>${esc(CONFIG.scene.headline)}</h1><p>${esc(CONFIG.scene.board)}</p><p>Hold up your phones. Who was it?</p>${name}</div>`;
 }
 
 // ---------- what Chris can do ----------
@@ -248,6 +249,8 @@ const act = {
     Object.assign(B, { showName: false, split: false, price: null });
   },
   // Picks one player at random and tells every phone. Test players have no phone, so a real one is chosen when there is one.
+  // Step one of the scene: the framing goes up on the scoreboard and on every phone. Nobody is picked yet.
+  sceneSetup() { net.update(`games/${B.gameId}`, { scene: { id: Date.now(), round: 0, state: "setup" } }); },
   drawScene(round, price) {
     const all = activePlayers(players()); const real = all.filter((p) => !p.test);
     const pool = real.length ? real : all;
@@ -637,8 +640,9 @@ function drawControls() {
   if (!B.gameId || !m) main = `<button class="go" data-act="newGame">New game</button>`;
   else if (m.phase === "lobby") {
     const sc = scene();
-    if (!sc) main = `<button class="go" data-act="draw1">Opening scene: draw round 1</button><button data-act="open" data-d="0" data-confirm="Skip the opening scene and open the ${CONFIG.decades[0].key}?">Skip the scene: open the ${CONFIG.decades[0].key}</button>`;
+    if (!sc) main = `<button class="go" data-act="setup">Opening scene: show the setup</button><button data-act="open" data-d="0" data-confirm="Skip the opening scene and open the ${CONFIG.decades[0].key}?">Skip the scene: open the ${CONFIG.decades[0].key}</button>`;
     else if (q && q.state === "open") main = `<button class="go" data-act="qclose">Close question, show answers</button>`;
+    else if (!sc.round) main = `<button class="go" data-act="draw1">Draw round 1</button>`;
     else if (sc.round === 1 && sc.state === "revealed") main = `<button class="go" data-act="qopen">Open question</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw1">Draw again</button>`;
     else if (sc.round === 1) {
       // One click starts round 2. Each button shows its price; one that would lose money is outlined in red and says so.
@@ -689,7 +693,7 @@ function drawControls() {
 // A double-click must not run two steps. The gold button changes meaning the moment it is
 // pressed (Open becomes Close), so a second game-changing click within 1.5 seconds is ignored.
 // The question buttons are a separate group, so "close the question, then open the 20s" still works.
-const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", draw1: "game", draw2: "game", draw2mid: "game", draw2fair: "game", draw2again: "game", qopen: "question", qclose: "question", qhide: "question" };
+const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", setup: "game", draw1: "game", draw2: "game", draw2mid: "game", draw2fair: "game", draw2again: "game", qopen: "question", qclose: "question", qhide: "question" };
 const lastStep = {};
 document.addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-act]");
@@ -714,6 +718,7 @@ document.addEventListener("click", (ev) => {
   else if (a === "qhide") act.hideQuestion();
   else if (a === "more") { B.more = !B.more; render(); }
   else if (a === "goal") { B.goal = !B.goal; render(); }
+  else if (a === "setup") act.sceneSetup();
   else if (a === "draw1") act.drawScene(1);
   else if (a === "draw2") act.drawScene(2, currentPrice());
   else if (a === "draw2mid") act.drawScene(2, middlePrice());
