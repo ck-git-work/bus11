@@ -55,6 +55,7 @@
   .fill.good { background: #1E7A46; }
   .fill.bad { background: #B3261E; }
   .fill.setup { background: var(--navy); }
+  .fill.setup p { font-size: 20px; line-height: 1.35; }
   .fill .bigword { font: 700 60px/1.05 Arial, Helvetica, sans-serif; margin-bottom: 14px; }
   .fill p { font-size: 23px; margin: 8px 0; }
   .fill .hold { font-size: 18px; opacity: 0.85; margin-top: 30px; }
@@ -234,7 +235,10 @@ function view() {
   }
   const m = S.meta;
   if (m.phase === "lobby" && S.scene && S.scene.state === "setup") return ["setup|" + S.scene.id, `<div class="fill setup"><div class="bigword">${money(CONFIG.scene.stake)}</div><p>${esc(CONFIG.scene.setup)}</p><p class="hold">Watch the screen.</p></div>`];
-  if (m.phase === "lobby" && S.scene && S.scene.state === "revealed" && S.scene.pid) return sceneView(S.scene);
+  // The proposal: time is rewound, so every phone goes back to navy with the full $50,000 while Chris talks.
+  if (m.phase === "lobby" && S.scene && S.scene.state === "offer") return ["offer|" + S.scene.id, `<div class="fill setup"><div class="bigword">${money(CONFIG.scene.stake)}</div><p class="hold">Watch the screen.</p></div>`];
+  // The red and green screens stay up through the outcome and the takeaway, so each student can read where they ended.
+  if (m.phase === "lobby" && S.scene && ["revealed", "outcome", "takeaway"].includes(S.scene.state) && S.scene.pid) return sceneView(S.scene);
   if (m.phase === "lobby") return ["lobby|" + (S.answer ? S.answer.v : ""), `<h1>You're in, ${esc(S.me.name)}.</h1><p>Watch the screen. The game starts soon.</p>`];
   if (m.phase === "open") {
     if ((S.me.joinedDecade || 0) > m.decade) return ["late|" + m.decade, `<h1>You're in, ${esc(S.me.name)}.</h1><p>You'll start with the next decade. Watch the screen.</p>`];
@@ -253,7 +257,7 @@ function sceneView(sc) {
   let lines;
   if (sc.round === 2) {
     lines = mine
-      ? [CONFIG.scene.disaster, `But you're covered. The pool pays the ${money(stake)}.`, `You paid ${money(price)}. You have ${money(stake - price)}.`]
+      ? [CONFIG.scene.disaster, `But you're covered. ${CONFIG.scene.organizer} pays you the ${money(stake)}.`, `You paid ${money(price)}. You have ${money(stake - price)}.`]
       : [`You paid ${money(price)}.`, `You have ${money(stake - price)}.`];
   } else {
     lines = mine ? [CONFIG.scene.disaster, `You have ${money(0)}.`] : [`You still have ${money(stake)}.`];

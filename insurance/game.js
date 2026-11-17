@@ -20,15 +20,37 @@ export const CONFIG = {
   scene: {
     stake: 50000, // what everyone has, and what the accident costs
     // The framing, shown on the scoreboard and on every phone before the first draw (Chris's words).
-    setup: "You've worked your entire life and have managed to save $50,000. It's everything you have.",
-    warning: "Something bad is about to happen to one of you. Nobody knows who.", // under the framing, on the scoreboard
+    organizer: "Chris", // who runs the pool; named on the outcome screen, in the question and on the covered phone
+    setup: "You've worked very hard your entire life so far. You budgeted carefully, you spent less than you earned, and you've managed to save $50,000. You're proud of your hard work and that you've managed to save the beginning of a nice nest egg for you and your loved ones.",
+    warning: "Unfortunately, something bad is about to happen to one of you in this room. And we can't say in advance who, exactly, it will be.", // under the framing, on the scoreboard only
     // The disaster is left unnamed on purpose: Chris names the possibilities aloud.
     disaster: "Something bad happened, and it cost you $50,000.", // on the unlucky phone
-    headline: "Something bad just happened to one of you.", // on the scoreboard, round 1
-    board: "It cost $50,000: everything they have.", // under that headline
-    again: "Same bad luck.", // starts the scoreboard's round 2 headline
+    // The scoreboard after the round 1 draw: the headline large, the next two lines at one smaller size.
+    headline: "And there it is...something bad just happened to one of you.",
+    hold: "Hold up your phones. Who was it?",
+    board: "Even more unfortunate, that bad thing just wiped out your $50,000 nest egg.",
+    // The proposal, on the scoreboard before the question opens: a heading, the offer, then the question in bold.
+    offer: [
+      "Let's rewind time and let me make you a proposal:",
+      "Before anything bad happens to one of us, I want to offer you a chance to avoid losing your entire nest egg. If the bad thing happens to you, I'll pay you $50,000. For providing you this service, though, I expect to collect a fee.",
+      "What would you pay me to guarantee that you can keep your $50,000 nest egg even if the bad thing happens to you?",
+    ],
+    // The scoreboard after the round 2 draw. Nothing else is on that screen.
+    again: "Tragedy has struck once again and the bad thing happened.",
+    hold2: "Hold up your phones. Who was it this time?",
+    // The outcome screen: this heading over a table of what is left of each nest egg, without and with insurance.
+    outcome: "The same tragedy struck our class, but with a very different outcome.",
+    // The takeaway screen. The definition is a DRAFT until Chris settles it; the terms are his.
+    takeaway: "Congratulations, you just invented insurance.",
+    definition: "Insurance: you pay a small, certain fee so that someone else pays if a large, uncertain loss happens to you.",
+    terms: [
+      ["Policy", "an insurance contract"],
+      ["Policyholder", "the buyer of insurance"],
+      ["Coverage", "the protection provided by a policy"],
+      ["Insured", "the person who bought insurance"],
+    ],
     margin: 0.2, // the "even split plus" button adds this much on top of the even split
-    prompt: "What would you pay to guarantee you won't be out the $50,000?",
+    prompt: "What would you pay Chris to guarantee that you can keep your $50,000 nest egg even if the bad thing happens to you?", // on the phones and over the answers
   },
 
   // Who sits on the board besides the students.
