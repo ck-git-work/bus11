@@ -107,6 +107,7 @@ export const CONFIG = {
             short: "Couldn't work",
             bill: "Five years of lost pay",
             paidNote: "60% of their pay",
+            ownVerb: "were short", // the insured person's share is pay that never came, not a bill they paid
             skipCost: 200000,
             boughtCost: 80000,
           },
@@ -154,7 +155,7 @@ export const CONFIG = {
       payLabel: "Together you make",
       make: 100000,
       living: 84000,
-      already: "You still have health insurance through work. Car insurance is still required by law, and you still pay for it. You have another insurance choice to make in your 50s: do you want to continue to pay for homeowners insurance or not?",
+      already: "You still have health insurance through work. Car insurance is still required by law, and you still pay for it. Taxes and living above no longer include homeowners insurance. You have another insurance choice to make in your 50s: do you want to continue to pay for homeowners insurance or not?",
       offers: [
         {
           id: "home",
@@ -311,7 +312,7 @@ export function scorePlayer(player, state, closed) {
         if (hits[o.event.id]) {
           const cost = bought ? o.event.boughtCost : o.event.skipCost;
           const insurerPaid = bought ? o.event.skipCost - o.event.boughtCost : 0;
-          row.events.push({ id: o.event.id, big: !!o.event.big, text: o.event.text, short: o.event.short || "", bill: o.event.bill || "", paidNote: o.event.paidNote || "", ownNote: o.event.ownNote || "", bought, cost, insurerPaid, fullCost: o.event.skipCost });
+          row.events.push({ id: o.event.id, big: !!o.event.big, text: o.event.text, short: o.event.short || "", bill: o.event.bill || "", paidNote: o.event.paidNote || "", ownNote: o.event.ownNote || "", ownVerb: o.event.ownVerb || "paid", bought, cost, insurerPaid, fullCost: o.event.skipCost });
           gotBack += insurerPaid;
         }
       });

@@ -317,13 +317,13 @@ function decadeLines(row) {
   }
   if (row.noAnswer && row.noAnswer.length) {
     const names = CONFIG.decades[row.d].offers.filter((o) => row.noAnswer.includes(o.id)).map((o) => o.short.toLowerCase()).join(" and ");
-    h += `<tr class="sub"><td colspan="2">Your choice on ${esc(names)} didn't reach the game in time, so it counts as bought.</td></tr>`;
+    h += `<tr class="sub"><td colspan="2">You didn't make a choice on ${esc(names)}, so it counts as bought.</td></tr>`;
   }
   if (!row.events.some((e) => e.big)) h += `<tr><td>Nothing big happened.</td><td></td></tr>`;
   row.events.forEach((e) => {
-    h += `<tr><td>${esc(e.text)}</td><td class="neg">${e.cost ? signed(-e.cost) : "$0"}</td></tr>`;
+    h += `<tr><td>${esc(e.text)}</td><td${e.cost ? ' class="neg"' : ""}>${e.cost ? signed(-e.cost) : "$0"}</td></tr>`;
     const bill = e.bill ? `${esc(e.bill)}: ${money(e.fullCost)}. ` : "";
-    const yours = e.cost ? ` and you paid ${money(e.cost)}${e.ownNote ? ` (${esc(e.ownNote.replace(/^their /, "your "))})` : ""}` : "";
+    const yours = e.cost ? ` and you ${esc(e.ownVerb)} ${money(e.cost)}${e.ownNote ? ` (${esc(e.ownNote.replace(/^their /, "your "))})` : ""}` : "";
     h += `<tr class="sub"><td colspan="2">${bill}${e.bought ? `You were insured, so the policy paid ${money(e.insurerPaid)}${yours}.` : `You weren't insured, so the whole cost is yours.`}</td></tr>`;
   });
   return h;

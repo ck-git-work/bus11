@@ -92,6 +92,10 @@
   .sum section p { margin: 0; }
   .sum .lab { font: 700 0.62em Arial, sans-serif; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
   .cd .k2 { font: 700 0.74em Arial, sans-serif; color: var(--muted); }
+  .wg { width: 100%; border-collapse: collapse; }
+  .wg th { text-align: left; font: 700 0.62em Arial, sans-serif; color: var(--muted); border-bottom: 2px solid var(--navy); padding: 0.5vh 0.8em 0.5vh 0; vertical-align: bottom; }
+  .wg td { padding: 1.1vh 0.8em 1.1vh 0; border-bottom: 1px solid #D5DBE5; white-space: nowrap; }
+  .wg td.n { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; padding-right: 2.2em; }
   .sum h1 { font: 700 1.5em Arial, sans-serif; margin: 0; }
   .sum > p { margin: 0; }
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4vw; }
@@ -330,7 +334,11 @@ function bigHit(row) {
   for (const dr of row.decades) { const e = dr.events.find((x) => x.big); if (e) return e; }
   return null;
 }
-function tagFor(row) { const e = bigHit(row); return e ? `${e.short}, ${e.bought ? "insured" : "no insurance"}` : ""; }
+function tagFor(row) {
+  const all = [];
+  row.decades.forEach((dr) => dr.events.filter((x) => x.big).forEach((e) => all.push(`${e.short}, ${e.bought ? "insured" : "no insurance"}`)));
+  return all.join("; ");
+}
 const npc = (r) => (r.house ? ` <span class="npc">– NPC</span>` : "");
 
 // tails = true shows only the top and bottom rows, large, with one line for everyone in between.
@@ -393,6 +401,7 @@ function summaryHtml() {
   const m = meta();
   const closed = closedCount(m);
   if (!closed) return `<div class="empty">The summary appears after the first decade closes.</div>`;
+  if (m.phase === "final") return wholeGameHtml();
   const d = Math.min(closed - 1, N_DECADES - 1);
   const dec = CONFIG.decades[d];
   const res = state().results[d] || {};
@@ -519,6 +528,36 @@ function drawSpread() {
   let lx = L;
   items.forEach(([fill, ring, label]) => { g += dot(lx, fill, ring) + `<text x="${lx + f * 0.75}" y="${ly}" font-size="${f * 0.85}" style="fill:#5B6475">${label}</text>`; lx += f * (2.2 + label.length * 0.47); });
   box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Each player's total savings as a dot on a line">${g}</svg>`;
+}
+
+// After "Show the ending", the Summary view covers the whole game: for each decade's disaster,
+// where the person who bought the insurance and the person who skipped it finished at 60.
+function wholeGameHtml() {
+  const board = leaderboard(players(), state(), N_DECADES);
+  const real = board.filter((r) => !r.house);
+  const tot = classTotals(board);
+  const cell = (r) => (r ? `<td>${esc(r.name)}${npc(r)}</td><td class="n${r.savings < 0 ? " neg" : ""}">${money(r.savings)}</td>` : `<td>–</td><td></td>`);
+  let rows = "";
+  CONFIG.decades.forEach((dec, d) => {
+    const o = dec.offers.find((x) => x.event.big);
+    if (!o) return;
+    if ((state().results[d] || {}).skipped) { rows += `<tr><td><b>${dec.key}</b></td><td colspan="5">Passed quietly</td></tr>`; return; }
+    const ev = (r) => r.decades[d] && r.decades[d].events.find((e) => e.id === o.event.id);
+    const hit = board.filter((r) => ev(r));
+    rows += `<tr><td><b>${dec.key}</b></td><td>${esc(o.event.short)}</td>${cell(hit.find((r) => ev(r).bought))}${cell(hit.find((r) => !ev(r).bought))}</tr>`;
+  });
+  const under = real.filter((r) => r.savings < 0).length;
+  const top = real[0], bottom = real[real.length - 1];
+  let h = `<div class="sum"><h1>The whole game</h1>
+    <section><p>Each decade, the disaster hit two people: one who bought the insurance and one who skipped it. This is where each of them ended at 60.</p>
+      <table class="wg"><tr><th>Decade</th><th>What happened</th><th colspan="2">Bought the insurance: total savings at 60</th><th colspan="2">Skipped it: total savings at 60</th></tr>${rows}</table></section>
+    <section><div class="lab">Insurance summary: the whole class, all four decades</div><div class="cards three">
+      <div class="cd"><div class="k">CLASS PAID IN</div><div class="v">${money(tot.paidIn)}</div></div>
+      <div class="cd"><div class="k">CLASS GOT BACK</div><div class="v">${money(tot.gotBack)}</div></div>
+      <div class="cd"><div class="k">${tot.kept >= 0 ? "INSURANCE COMPANY KEPT" : "COMPANY PAID OUT MORE BY"}</div><div class="v">${money(Math.abs(tot.kept))}</div></div>
+    </div></section>`;
+  if (top) h += `<section><div class="lab">Class score summary</div><p>Highest total savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>. ${under} of ${real.length} ended below zero.</p></section>`;
+  return h + `</div>`;
 }
 
 function drawControls() {
