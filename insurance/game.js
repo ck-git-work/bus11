@@ -62,6 +62,28 @@ export const CONFIG = {
     prompt: "What would you pay Chris to guarantee that you can keep your $50,000 nest egg even if the bad thing happens to you?", // on the phones and over the answers
   },
 
+  // Teaching slides for the scoreboard's Slides view. One list for each point in the game:
+  // 0 to 3 = after that decade closes (20s, 30s, 40s, 50s); final = after "Show the ending".
+  // Each slide is a title and a few lines. An empty list hides the Slides button at that point.
+  // PLACEHOLDERS until Chris's slides are settled in the deck: bracketed lines are not his words.
+  slides: {
+    0: [
+      { title: "Auto insurance", lines: ["[Required. Chris's words go here.]"] },
+      { title: "Health insurance", lines: ["[A choice. Chris's words go here.]"] },
+      { title: "Phone protection", lines: ["[Also a choice. It stands for any product insurance. Chris's words go here.]"] },
+    ],
+    1: [{ title: "Disability insurance", lines: ["[Chris's words go here.]"] }],
+    2: [
+      { title: "Life insurance", lines: ["[Chris's words go here.]"] },
+      { title: "Insurance is not an investment", lines: ["[Chris's words go here.]"] },
+    ],
+    3: [{ title: "Homeowners insurance", lines: ["[Chris's words go here.]"] }],
+    final: [
+      { title: "[Insurance takeaways: 4 or 5, to come]", lines: ["[Chris's words go here.]"] },
+      { title: "Is the goal really the most money possible?", lines: ["[Chris's questions go here.]"] },
+    ],
+  },
+
   // Who sits on the board besides the students.
   house: [
     { id: "house_buy", name: "Jordan", policy: "buy" }, // always buys

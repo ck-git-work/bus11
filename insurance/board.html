@@ -164,7 +164,7 @@ const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, goal: false, prompt: DEFAULT_PROMPT, lastPhase: "", showName: false, split: false, price: null };
+const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, goal: false, prompt: DEFAULT_PROMPT, lastPhase: "", showName: false, split: false, price: null, slide: 0, slideKey: "" };
 let net, stopGame = null;
 
 start();
@@ -335,6 +335,28 @@ const act = {
   },
 };
 
+// ---------- teaching slides ----------
+// Shown on this scoreboard only: nothing is sent to the phones or saved in the database, so paging
+// through slides can never change the game. Which list shows depends on where the game is.
+function slideSet() {
+  const m = meta();
+  if (!m || m.phase === "lobby") return [];
+  const key = m.phase === "final" ? "final" : String(closedCount(m) - 1); // the decade that closed most recently
+  if (B.slideKey !== key) { B.slideKey = key; B.slide = 0; } // a new point in the game starts at its first slide
+  return (CONFIG.slides || {})[key] || [];
+}
+function slideAt() { // the current slide's position, kept inside the list
+  const list = slideSet();
+  B.slide = Math.max(0, Math.min(list.length - 1, B.slide));
+  return { list, i: B.slide };
+}
+function slidesHtml() {
+  const { list, i } = slideAt();
+  if (!list.length) return `<div class="empty">No slides at this point in the game.</div>`;
+  return `<div class="scene"><h1>${esc(list[i].title)}</h1>${(list[i].lines || []).map((l) => `<p>${esc(l)}</p>`).join("")}</div>`;
+}
+function slideStep(by) { if (B.view !== "slides") return; B.slide += by; render(); }
+
 // ---------- drawing ----------
 function render() {
   drawTop();
@@ -346,6 +368,7 @@ function render() {
   else if (B.view === "scene") v.innerHTML = sceneHtml();
   else if (B.view === "question") v.innerHTML = questionHtml();
   else if (B.view === "summary") v.innerHTML = summaryHtml();
+  else if (B.view === "slides") v.innerHTML = slidesHtml();
   else if (B.view === "spread") { v.innerHTML = `<div class="spread"><h1 id="sph"></h1><div class="plot" id="plot"></div></div>`; drawSpread(); }
   else { v.innerHTML = boardHtml(B.view === "tails"); sizeRows(); }
 }
@@ -494,6 +517,14 @@ function sizeRows() {
   document.documentElement.style.setProperty("--fs", fs.toFixed(1) + "px");
 }
 
+// The class score: the highest, the middle and the lowest total savings among the students. No names here (Chris, 11/16).
+// It sits after the decade's spotlight insurance and before the insurance summary.
+function scoreCards(real, extra) {
+  if (!real.length) return "";
+  const pick = [["HIGHEST", real[0]], ["MIDDLE", real[Math.floor((real.length - 1) / 2)]], ["LOWEST", real[real.length - 1]]];
+  return `<section><div class="lab">Class score summary: total savings</div><div class="cards three">${pick.map(([k, r]) =>
+    `<div class="cd"><div class="k">${k}</div><div class="v${r.savings < 0 ? " neg" : ""}">${money(r.savings)}</div></div>`).join("")}</div>${extra ? `<p>${extra}</p>` : ""}</section>`;
+}
 function summaryHtml() {
   const m = meta();
   const closed = closedCount(m);
@@ -507,7 +538,9 @@ function summaryHtml() {
   const tot = classTotals(board);
   if (res.skipped) return `<div class="sum"><h1>The ${dec.key} passed quietly</h1><p>Nobody chose anything this decade, and everyone saved.</p></div>`;
   let h = `<div class="sum"><h1>The ${dec.key}</h1>`;
-  dec.offers.forEach((o) => {
+  // Order: the decade's big insurance first, then the class score, then any small one (the phone).
+  [...dec.offers.filter((o) => o.event.big), null, ...dec.offers.filter((o) => !o.event.big)].forEach((o) => {
+    if (!o) { h += scoreCards(real); return; }
     const ans = present(d).map((p) => picksFor(p, d, state().choices, state().results)[o.id]);
     const bought = ans.filter((v) => v === true).length, skipped = ans.filter((v) => v === false).length, silent = ans.length - bought - skipped;
     h += `<section><p><b>${esc(o.name)}:</b> ${bought} bought, ${skipped} skipped${silent ? `, ${silent} didn't choose` : ""}.</p>`;
@@ -539,7 +572,6 @@ function summaryHtml() {
       <div class="cd"><div class="k">CLASS GOT BACK</div><div class="v">${money(tot.gotBack)}</div></div>
       <div class="cd"><div class="k">${tot.kept >= 0 ? "INSURANCE COMPANY KEPT" : "COMPANY PAID OUT MORE BY"}</div><div class="v">${money(Math.abs(tot.kept))}</div></div>
     </div></section>`;
-  if (top) h += `<section><div class="lab">Class score summary</div><p>Highest total savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>.</p></section>`;
   return h + `</div>`;
 }
 
@@ -647,13 +679,12 @@ function wholeGameHtml() {
   const top = real[0], bottom = real[real.length - 1];
   let h = `<div class="sum"><h1>The whole game</h1>
     <section><p>Each decade, the disaster hit two people: one who bought the insurance and one who skipped it. This is where each of them ended at 60.</p>
-      <table class="wg"><tr><th>Decade</th><th>What happened</th><th colspan="2">Bought the insurance: total savings at 60</th><th colspan="2">Skipped it: total savings at 60</th></tr>${rows}</table></section>
+      <table class="wg"><tr><th>Decade</th><th>What happened</th><th colspan="2">Bought the insurance: total savings at 60</th><th colspan="2">Skipped it: total savings at 60</th></tr>${rows}</table></section>${scoreCards(real, `${under} of ${real.length} ended below zero.`)}
     <section><div class="lab">Insurance summary: the whole class, all four decades</div><div class="cards three">
       <div class="cd"><div class="k">CLASS PAID IN</div><div class="v">${money(tot.paidIn)}</div></div>
       <div class="cd"><div class="k">CLASS GOT BACK</div><div class="v">${money(tot.gotBack)}</div></div>
       <div class="cd"><div class="k">${tot.kept >= 0 ? "INSURANCE COMPANY KEPT" : "COMPANY PAID OUT MORE BY"}</div><div class="v">${money(Math.abs(tot.kept))}</div></div>
     </div></section>`;
-  if (top) h += `<section><div class="lab">Class score summary</div><p>Highest total savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>. ${under} of ${real.length} ended below zero.</p></section>`;
   return h + `</div>`;
 }
 
@@ -696,8 +727,9 @@ function drawControls() {
       : `<button class="go" data-act="final">Show the ending</button>`;
   } else main = `<span>Game over.</span>`;
   const pre = !!m && m.phase === "lobby";
-  const views = !m ? "" : (pre ? ["lobby", ...(scene() ? ["scene"] : []), "question"] : ["lobby", "board", "summary", "tails", "spread"]).map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", scene: "Opening scene", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
-    + (m && B.view === "spread" ? `<button data-act="goal" class="${B.goal ? "on" : ""}">Goal line</button>` : "");
+  const views = !m ? "" : (pre ? ["lobby", ...(scene() ? ["scene"] : []), "question"] : ["lobby", "board", "summary", "tails", "spread", ...(slideSet().length ? ["slides"] : [])]).map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", scene: "Opening scene", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question", slides: "Slides" }[v]}</button>`).join("")
+    + (m && B.view === "spread" ? `<button data-act="goal" class="${B.goal ? "on" : ""}">Goal line</button>` : "")
+    + (m && B.view === "slides" && slideSet().length ? `<button data-act="slideprev">◀ Back</button><span class="math">${slideAt().i + 1} of ${slideAt().list.length}</span><button data-act="slidenext">Next ▶</button>` : "");
   // The question belongs to the opening scene, where the gold button runs it. The game has no question buttons.
   const more = !m ? "" : `<div id="more" class="${B.more ? "on" : ""}">
       ${m.phase === "lobby" ? `<label>Question: <input id="prompt" value="${esc(B.prompt)}"></label>` : ""}
@@ -744,6 +776,8 @@ document.addEventListener("click", (ev) => {
   else if (a === "qhide") act.hideQuestion();
   else if (a === "more") { B.more = !B.more; render(); }
   else if (a === "goal") { B.goal = !B.goal; render(); }
+  else if (a === "slideprev") slideStep(-1);
+  else if (a === "slidenext") slideStep(1);
   else if (a === "setup") act.sceneSetup();
   else if (a === "offer" || a === "outcome" || a === "takeaway" || a === "intro") act.sceneStep(a);
   else if (a === "phones2") act.sceneStep("revealed");
@@ -759,6 +793,12 @@ document.addEventListener("click", (ev) => {
   else if (a === "test") act.addTest(10);
   else if (a === "remove") { const p = players()[b.dataset.id]; if (confirm("Remove " + (p ? p.name : "this player") + " from the game?")) act.remove(b.dataset.id); }
   else if (a === "wipe") { if (confirm("Delete all data for this game? This can't be undone.")) act.wipe(); }
+});
+// In the Slides view the arrow keys page through the slides, and so does a presentation clicker (Page Up / Page Down).
+document.addEventListener("keydown", (ev) => {
+  if (!B.host || B.view !== "slides" || /^(INPUT|TEXTAREA)$/.test(ev.target.tagName || "")) return;
+  if (ev.key === "ArrowRight" || ev.key === "PageDown") { ev.preventDefault(); slideStep(1); }
+  else if (ev.key === "ArrowLeft" || ev.key === "PageUp") { ev.preventDefault(); slideStep(-1); }
 });
 document.addEventListener("input", (ev) => {
   if (ev.target.id === "prompt") B.prompt = ev.target.value;
