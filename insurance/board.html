@@ -117,6 +117,17 @@
   .spread svg { display: block; }
   .spread text { font-family: Calibri, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--navy); }
   .three { grid-template-columns: 1fr 1fr 1fr; }
+  .four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .qv .split { margin: 0; }
+  /* the opening scene */
+  .scene { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 3vh; font-size: clamp(22px, min(3vw, 4.6vh), 56px); }
+  .scene h1 { font: 700 1.45em/1.15 Arial, sans-serif; margin: 0; }
+  .scene p { margin: 0; }
+  .scene .rc { font-size: 1em; max-width: 30em; }
+  .scene .rc td { padding: 0.6vh 0; }
+  .scene .who { font-size: 1.25em; }
+  #controls .math { font-size: 15px; }
+  #controls .math.neg { font-weight: 700; }
   .qv { flex: 1; display: flex; flex-direction: column; gap: 2vh; min-height: 0; font-size: clamp(18px, 2vw, 36px); }
   .qv h1 { font: 700 clamp(28px, 3.6vw, 62px) Arial, sans-serif; margin: 0; }
   .qv .chip { font-variant-numeric: tabular-nums; }
@@ -135,12 +146,12 @@ import { CONFIG, N_DECADES, money, activePlayers, leaderboard, classTotals, deal
 import { connect, randomId, sha256 } from "./net.js";
 
 const HOST_HASH = "c4e23f2dbd95f33dfc2aae690a970b1fcf347055d185a32c085ff84b4d96a184";
-const DEFAULT_PROMPT = "What's the most you would pay to not be the one?";
+const DEFAULT_PROMPT = CONFIG.scene.prompt;
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, goal: false, prompt: DEFAULT_PROMPT, lastPhase: "" };
+const B = { host: false, gameId: null, G: null, view: "lobby", manage: false, more: false, goal: false, prompt: DEFAULT_PROMPT, lastPhase: "", showName: false, split: false, price: null };
 let net, stopGame = null;
 
 start();
@@ -178,15 +189,51 @@ function joinUrl() {
   const u = new URL("index.html", location.href); u.search = params.get("g") ? "?g=" + params.get("g") : "";
   return u.href.replace(/index\.html/, "");
 }
+const scene = () => G().scene || null;
 function autoView() {
-  const m = meta(); const q = G().question;
-  const sig = (m ? m.phase + m.decade : "none") + "|" + (q ? q.state + q.id : "");
+  const m = meta(); const q = G().question; const sc = scene();
+  const sig = (m ? m.phase + m.decade : "none") + "|" + (q ? q.state + q.id : "") + "|" + (sc ? sc.id + sc.state : "");
   if (sig === B.lastPhase) return;
   B.lastPhase = sig;
   if (!m) return;
   if (q && q.state === "open") B.view = "question";
-  else if (m.phase === "lobby") B.view = q && q.state === "closed" ? "question" : "lobby";
+  else if (m.phase === "lobby") B.view = sc && sc.state === "revealed" ? "scene" : q && q.state === "closed" ? "question" : "lobby";
   else B.view = "board";
+}
+
+// ---------- the opening scene ----------
+const sceneCount = () => activePlayers(players()).length;
+const evenSplit = () => (sceneCount() ? CONFIG.scene.stake / sceneCount() : 0);
+// Two ready-made prices for round 2. Both follow the head count: the even split is the loss divided by
+// everyone who has joined, and the second price adds a margin on top, rounded up to the next $100.
+const middlePrice = () => { const a = answers(); return a.length ? median(a) : null; };
+const marginPrice = () => Math.ceil((evenSplit() * (1 + CONFIG.scene.margin)) / 100) * 100;
+// The price in the typing box: what Chris typed, or else the class's middle answer.
+function currentPrice() {
+  if (B.price !== null) return B.price;
+  return middlePrice() !== null ? middlePrice() : marginPrice();
+}
+function priceMath(price) {
+  const n = sceneCount(), kept = n * price - CONFIG.scene.stake;
+  return { kept, text: `${n} × ${money(price)} = ${money(n * price)} collected, ${money(CONFIG.scene.stake)} paid: ${kept >= 0 ? "keeps " + money(kept) : "SHORT by " + money(-kept)}` };
+}
+function sceneHtml() {
+  const sc = scene();
+  if (!sc) return `<div class="empty">The opening scene hasn't started.</div>`;
+  const stake = CONFIG.scene.stake;
+  const who = (players()[sc.pid] || {}).name || "";
+  const name = B.showName ? `<p class="who">It was <b>${esc(who)}</b>.</p>` : "";
+  if (sc.round === 2) {
+    const n = sc.n || sceneCount(), price = Number(sc.price) || 0, kept = n * price - stake;
+    return `<div class="scene"><h1>${esc(CONFIG.scene.again)} This time everyone paid ${money(price)} first.</h1>
+      <table class="rc">
+        <tr><td>${n} people paid ${money(price)} each</td><td>${money(n * price)}</td></tr>
+        <tr><td>Paid to the one who was hit</td><td>${money(stake)}</td></tr>
+        <tr class="t"><td>${kept >= 0 ? "Kept by the organizer" : "The organizer is short"}</td><td class="${kept < 0 ? "neg" : ""}">${money(Math.abs(kept))}</td></tr>
+      </table>
+      <p>Hold up your phones. Who was it this time?</p>${name}</div>`;
+  }
+  return `<div class="scene"><h1>Everyone here has ${money(stake)}.</h1><p>${esc(CONFIG.scene.board)}</p><p>Hold up your phones. Who was it?</p>${name}</div>`;
 }
 
 // ---------- what Chris can do ----------
@@ -196,8 +243,23 @@ const act = {
     const id = params.get("g") || "g" + randomId(6);
     await net.set(`games/${id}`, { meta: { phase: "lobby", decade: 0, createdAt: Date.now() } }); // replaces any old data under this id
     if (!params.get("g")) await net.set("current", id);
+    Object.assign(B, { showName: false, split: false, price: null });
   },
-  openQuestion() { net.set(path("question"), { state: "open", id: Date.now(), prompt: B.prompt || DEFAULT_PROMPT }); },
+  // Picks one player at random and tells every phone. Test players have no phone, so a real one is chosen when there is one.
+  drawScene(round, price) {
+    const all = activePlayers(players()); const real = all.filter((p) => !p.test);
+    const pool = real.length ? real : all;
+    if (!pool.length) return;
+    const sc = { id: Date.now(), round, pid: pool[Math.floor(Math.random() * pool.length)].id, state: "revealed", n: all.length };
+    if (round === 2) sc.price = price;
+    B.showName = false;
+    net.update(`games/${B.gameId}`, { scene: sc });
+  },
+  openQuestion() {
+    const up = { question: { state: "open", id: Date.now(), prompt: B.prompt || DEFAULT_PROMPT } };
+    if (scene()) up["scene/state"] = "done"; // the phones leave the red and green screens
+    net.update(`games/${B.gameId}`, up);
+  },
   closeQuestion() { net.update(path("question"), { state: "closed" }); },
   hideQuestion() { net.update(path("question"), { state: "off" }); B.view = meta().phase === "lobby" ? "lobby" : "board"; render(); },
   openDecade(d) {
@@ -249,6 +311,7 @@ function render() {
   const v = $("view");
   if (!B.gameId || !m) { v.innerHTML = `<div class="empty">${B.host ? "No game yet. Press New game below." : "The game hasn't started yet."}</div>`; return; }
   if (B.view === "lobby") v.innerHTML = lobbyHtml();
+  else if (B.view === "scene") v.innerHTML = sceneHtml();
   else if (B.view === "question") v.innerHTML = questionHtml();
   else if (B.view === "summary") v.innerHTML = summaryHtml();
   else if (B.view === "spread") { v.innerHTML = `<div class="spread"><h1 id="sph"></h1><div class="plot" id="plot"></div></div>`; drawSpread(); }
@@ -262,7 +325,7 @@ function drawTop() {
   const n = activePlayers(players()).length;
   let phase = "Insurance game", side = `${n} player${n === 1 ? "" : "s"}`;
   const dec = CONFIG.decades[m.decade];
-  if (m.phase === "lobby") phase = "Join the game";
+  if (m.phase === "lobby") phase = B.view === "scene" || (scene() && B.view === "question") ? "Before the game" : "Join the game";
   else if (m.phase === "open") {
     const all = present(m.decade), done = lockedIn(m.decade);
     phase = `The ${dec.key} are open`;
@@ -298,11 +361,13 @@ function questionHtml() {
   const a = answers();
   const showValues = q.state !== "open";
   return `<div class="qv"><h1>${esc(q.prompt || "")}</h1>
-    ${showValues ? `<div class="cards three">
+    ${showValues ? `<div class="cards four">
         <div class="cd"><div class="k">LOWEST</div><div class="v">${a.length ? money(a[0]) : "–"}</div></div>
         <div class="cd"><div class="k">MIDDLE ANSWER</div><div class="v">${a.length ? money(median(a)) : "–"}</div></div>
+        <div class="cd"><div class="k">AVERAGE</div><div class="v">${a.length ? money(Math.round(a.reduce((s, v) => s + v, 0) / a.length)) : "–"}</div></div>
         <div class="cd"><div class="k">HIGHEST</div><div class="v">${a.length ? money(a[a.length - 1]) : "–"}</div></div>
       </div>
+      ${B.split && sceneCount() ? `<p class="split">Split evenly: ${money(CONFIG.scene.stake)} ÷ ${sceneCount()} people = <b>${money(Math.round(evenSplit()))}</b> each.</p>` : ""}
       <div class="chips">${a.map((v) => `<span class="chip">${money(v)}</span>`).join("")}</div>`
       : `<div class="empty">${a.length} answer${a.length === 1 ? "" : "s"} so far. Answers appear when the question closes.</div>`}
   </div>`;
@@ -568,7 +633,25 @@ function drawControls() {
   const q = G().question;
   let main = "";
   if (!B.gameId || !m) main = `<button class="go" data-act="newGame">New game</button>`;
-  else if (m.phase === "lobby") main = `<button class="go" data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button>`;
+  else if (m.phase === "lobby") {
+    const sc = scene();
+    const skip = `<button data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button>`;
+    if (!sc) main = `<button class="go" data-act="draw1">Opening scene: draw round 1</button>${skip}`;
+    else if (q && q.state === "open") main = `<button class="go" data-act="qclose">Close question, show answers</button>`;
+    else if (sc.round === 1 && sc.state === "revealed") main = `<button class="go" data-act="qopen">Open question</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw1">Draw again</button>${skip}`;
+    else if (sc.round === 1) {
+      // One click starts round 2. Each button shows its price; one that would lose money is outlined in red and says so.
+      const pm = priceMath(currentPrice());
+      const mid = middlePrice(), fair = marginPrice();
+      const midKept = mid === null ? 0 : priceMath(mid).kept;
+      const midBtn = mid === null ? "" : `<button class="${midKept < 0 ? "warn" : "go"}" data-act="draw2mid">Round 2 at the middle answer: ${money(mid)}${midKept < 0 ? ` (short ${money(-midKept)})` : ""}</button>`;
+      main = `${midBtn}<button class="go" data-act="draw2fair">Round 2 at the even split + ${Math.round(CONFIG.scene.margin * 100)}%: ${money(fair)}</button>
+        <label>or type a price: <input id="price" inputmode="numeric" style="min-width:100px;width:100px" value="${money(currentPrice())}"></label>
+        <button data-act="draw2">Draw at that price</button>
+        <span id="pricemath" class="math${pm.kept < 0 ? " neg" : ""}" style="${pm.kept < 0 ? "color:var(--debt)" : ""}">${pm.text}</span>
+        <button data-act="split" class="${B.split ? "on" : ""}">Show the even split</button><button data-act="qopen">Ask again</button>${skip}`;
+    } else main = `<button class="go" data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw2again">Draw round 2 again</button>`;
+  }
   else if (m.phase === "open") main = `<button class="go" data-act="close">Close the ${CONFIG.decades[m.decade].key}</button>`;
   else if (m.phase === "closed") {
     const next = m.decade + 1;
@@ -576,10 +659,10 @@ function drawControls() {
       ? `<button class="go" data-act="open" data-d="${next}">Open the ${CONFIG.decades[next].key}</button><button data-act="skip" data-d="${next}">Skip the ${CONFIG.decades[next].key}</button>`
       : `<button class="go" data-act="final">Show the ending</button>`;
   } else main = `<span>Game over.</span>`;
-  const views = !m ? "" : ["lobby", "board", "summary", "tails", "spread", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
+  const views = !m ? "" : ["lobby", ...(scene() ? ["scene"] : []), "board", "summary", "tails", "spread", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", scene: "Opening scene", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
     + (m && B.view === "spread" ? `<button data-act="goal" class="${B.goal ? "on" : ""}">Goal line</button>` : "");
   let qb = "";
-  if (m) {
+  if (m && !(m.phase === "lobby" && scene())) { // during the opening scene the gold button handles the question
     if (!q || q.state === "off") qb = `<button data-act="qopen">Open question</button>`;
     else if (q.state === "open") qb = `<button data-act="qclose">Close question, show answers</button>`;
     else qb = `<button data-act="qopen">Ask again</button><button data-act="qhide">Put question away</button>`;
@@ -593,7 +676,7 @@ function drawControls() {
       <button class="warn" data-act="wipe">Delete this game's data</button>
       <button data-act="newGame">New game</button>
     </div>`;
-  const focusPrompt = document.activeElement && document.activeElement.id === "prompt";
+  const focusPrompt = document.activeElement && (document.activeElement.id === "prompt" || document.activeElement.id === "price");
   if (focusPrompt) return; // don't redraw while Chris is typing the question
   c.innerHTML = `${main}<span class="sep"></span>${views}<span class="sep"></span>${qb}${m ? `<span class="sep"></span><button data-act="more" class="${B.more ? "on" : ""}">More</button>` : ""}${more}`;
 }
@@ -601,7 +684,7 @@ function drawControls() {
 // A double-click must not run two steps. The gold button changes meaning the moment it is
 // pressed (Open becomes Close), so a second game-changing click within 1.5 seconds is ignored.
 // The question buttons are a separate group, so "close the question, then open the 20s" still works.
-const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", qopen: "question", qclose: "question", qhide: "question" };
+const GROUPS = { newGame: "game", open: "game", close: "game", skip: "game", final: "game", unfinal: "game", reopen: "game", wipe: "game", test: "game", draw1: "game", draw2: "game", draw2mid: "game", draw2fair: "game", draw2again: "game", qopen: "question", qclose: "question", qhide: "question" };
 const lastStep = {};
 document.addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-act]");
@@ -625,13 +708,30 @@ document.addEventListener("click", (ev) => {
   else if (a === "qhide") act.hideQuestion();
   else if (a === "more") { B.more = !B.more; render(); }
   else if (a === "goal") { B.goal = !B.goal; render(); }
+  else if (a === "draw1") act.drawScene(1);
+  else if (a === "draw2") act.drawScene(2, currentPrice());
+  else if (a === "draw2mid") act.drawScene(2, middlePrice());
+  else if (a === "draw2fair") act.drawScene(2, marginPrice());
+  else if (a === "draw2again") act.drawScene(2, Number(scene().price) || 0);
+  else if (a === "showname") { B.showName = !B.showName; B.view = "scene"; render(); }
+  else if (a === "split") { B.split = !B.split; B.view = "question"; render(); }
+
   else if (a === "manage") { B.manage = !B.manage; render(); }
   else if (a === "test") act.addTest(10);
   else if (a === "remove") { const p = players()[b.dataset.id]; if (confirm("Remove " + (p ? p.name : "this player") + " from the game?")) act.remove(b.dataset.id); }
   else if (a === "wipe") { if (confirm("Delete all data for this game? This can't be undone.")) act.wipe(); }
 });
-document.addEventListener("input", (ev) => { if (ev.target.id === "prompt") B.prompt = ev.target.value; });
-document.addEventListener("focusout", (ev) => { if (ev.target.id === "prompt") setTimeout(render, 0); });
+document.addEventListener("input", (ev) => {
+  if (ev.target.id === "prompt") B.prompt = ev.target.value;
+  if (ev.target.id === "price") {
+    // Chris types a price for round 2; the line beside it shows at once whether the organizer comes out ahead.
+    const digits = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
+    B.price = digits ? Number(digits) : 0;
+    const pm = priceMath(B.price); const el = $("pricemath");
+    if (el) { el.textContent = pm.text; el.className = "math" + (pm.kept < 0 ? " neg" : ""); el.style.color = pm.kept < 0 ? "var(--debt)" : ""; }
+  }
+});
+document.addEventListener("focusout", (ev) => { if (ev.target.id === "prompt" || ev.target.id === "price") setTimeout(render, 0); });
 </script>
 </body>
 </html>

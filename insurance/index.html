@@ -50,6 +50,13 @@
   .big { font: 700 44px/1.05 Arial, Helvetica, sans-serif; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
   .msg { color: var(--debt); min-height: 1.4em; }
   .watch { text-align: center; color: var(--muted); margin-top: 18px; }
+  /* the opening scene: the whole phone turns one color */
+  .fill { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px; color: #fff; }
+  .fill.good { background: #1E7A46; }
+  .fill.bad { background: #B3261E; }
+  .fill .bigword { font: 700 60px/1.05 Arial, Helvetica, sans-serif; margin-bottom: 14px; }
+  .fill p { font-size: 23px; margin: 8px 0; }
+  .fill .hold { font-size: 18px; opacity: 0.85; margin-top: 30px; }
   table.hist { width: 100%; border-collapse: collapse; font-size: 16px; }
   table.hist th { text-align: left; font: 700 14px Arial, sans-serif; color: var(--muted); padding: 4px 6px 4px 0; border-bottom: 2px solid var(--navy); }
   table.hist td { padding: 7px 6px 7px 0; border-bottom: 1px solid #D5DBE5; vertical-align: top; }
@@ -72,7 +79,7 @@ const app = document.getElementById("app");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // Everything the page knows. The screen is always redrawn from this.
-const S = { solo: false, unlucky: false, ready: false, gameId: null, pid: null, meta: null, results: null, question: null, me: null, mine: null, answer: null, joinMsg: "", clash: null, editAnswer: false };
+const S = { solo: false, unlucky: false, ready: false, gameId: null, pid: null, meta: null, results: null, question: null, scene: null, me: null, mine: null, answer: null, joinMsg: "", clash: null, editAnswer: false };
 let net = null;
 let stops = [];      // listeners on the game
 let mineStops = [];  // listeners on this player's own records
@@ -114,11 +121,12 @@ function useGame(g) {
   if (g === S.gameId && S.ready) return;
   stops.forEach((f) => f()); stops = [];
   mineStops.forEach((f) => f()); mineStops = [];
-  Object.assign(S, { ready: true, gameId: g, pid: null, meta: null, results: null, question: null, me: null, mine: null, answer: null, joinMsg: "", clash: null });
+  Object.assign(S, { ready: true, gameId: g, pid: null, meta: null, results: null, question: null, scene: null, me: null, mine: null, answer: null, joinMsg: "", clash: null });
   if (!g) return render();
   stops.push(net.on(`games/${g}/meta`, (v) => { S.meta = v; render(); }));
   stops.push(net.on(`games/${g}/results`, (v) => { S.results = v; render(); }));
   stops.push(net.on(`games/${g}/question`, (v) => { S.question = v; render(); }));
+  stops.push(net.on(`games/${g}/scene`, (v) => { S.scene = v; render(); }));
   const saved = store.get(pidKey(g));
   if (saved) listenMine(saved);
   render();
@@ -224,6 +232,7 @@ function view() {
     if (q && q.state === "open") return questionView(q);
   }
   const m = S.meta;
+  if (m.phase === "lobby" && S.scene && S.scene.state === "revealed" && S.scene.pid) return sceneView(S.scene);
   if (m.phase === "lobby") return ["lobby|" + (S.answer ? S.answer.v : ""), `<h1>You're in, ${esc(S.me.name)}.</h1><p>Watch the screen. The game starts soon.</p>`];
   if (m.phase === "open") {
     if ((S.me.joinedDecade || 0) > m.decade) return ["late|" + m.decade, `<h1>You're in, ${esc(S.me.name)}.</h1><p>You'll start with the next decade. Watch the screen.</p>`];
@@ -231,6 +240,23 @@ function view() {
   }
   if (m.phase === "closed") return resultView(m.decade);
   return finalView();
+}
+
+// The opening scene. Red means the accident landed on you; green means it didn't.
+// In round 2 everyone paid the price, so the one who is hit is covered.
+function sceneView(sc) {
+  const stake = CONFIG.scene.stake;
+  const mine = sc.pid === S.pid;
+  const price = sc.round === 2 ? Number(sc.price) || 0 : 0;
+  let lines;
+  if (sc.round === 2) {
+    lines = mine
+      ? [CONFIG.scene.disaster, `But you're covered. The pool pays the ${money(stake)}.`, `You paid ${money(price)}. You have ${money(stake - price)}.`]
+      : [`You paid ${money(price)}.`, `You have ${money(stake - price)}.`];
+  } else {
+    lines = mine ? [CONFIG.scene.disaster, `You have ${money(0)}.`] : [`You still have ${money(stake)}.`];
+  }
+  return [`scene|${sc.id}|${mine}`, `<div class="fill ${mine ? "bad" : "good"}"><div class="bigword">${mine ? "It's you." : "You're fine."}</div>${lines.map((l) => `<p>${esc(l)}</p>`).join("")}<p class="hold">Hold up your phone.</p></div>`];
 }
 
 function joinView() {
@@ -396,7 +422,7 @@ app.addEventListener("click", (ev) => {
     const n = Number(document.getElementById("amount").value.replace(/[^0-9]/g, ""));
     const raw = document.getElementById("amount").value.replace(/[^0-9]/g, "");
     if (!raw) { document.getElementById("amsg").textContent = "Type a dollar amount first."; return; }
-    if (n > 10000000) { document.getElementById("amsg").textContent = "That's more than $10,000,000. Check the number."; return; }
+    if (n > CONFIG.scene.stake) { document.getElementById("amsg").textContent = `You only have ${money(CONFIG.scene.stake)}.`; return; }
     sendAnswer(n);
   }
 });
