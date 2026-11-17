@@ -87,7 +87,11 @@
   .legend .mk { font-size: 0.9em; }
 
   /* summary and question */
-  .sum { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1vh; font-size: clamp(15px, min(2vw, 3.2vh), 36px); overflow: hidden; }
+  .sum { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0.8vh; font-size: clamp(15px, min(2vw, 3vh), 36px); overflow: hidden; }
+  .sum section { border-top: 1px solid #C5CCD8; padding-top: 1vh; display: flex; flex-direction: column; gap: 0.7vh; }
+  .sum section p { margin: 0; }
+  .sum .lab { font: 700 0.62em Arial, sans-serif; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+  .cd .k2 { font: 700 0.74em Arial, sans-serif; color: var(--muted); }
   .sum h1 { font: 700 1.5em Arial, sans-serif; margin: 0; }
   .sum > p { margin: 0; }
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4vw; }
@@ -400,10 +404,11 @@ function summaryHtml() {
   dec.offers.forEach((o) => {
     const ans = present(d).map((p) => picksFor(p, d, state().choices, state().results)[o.id]);
     const bought = ans.filter((v) => v === true).length, skipped = ans.filter((v) => v === false).length, silent = ans.length - bought - skipped;
-    h += `<p><b>${esc(o.name)}:</b> ${bought} bought, ${skipped} skipped${silent ? `, ${silent} didn't choose` : ""}.</p>`;
+    h += `<section><p><b>${esc(o.name)}:</b> ${bought} bought, ${skipped} skipped${silent ? `, ${silent} didn't choose` : ""}.</p>`;
     if (!o.event.big) {
       const n = real.filter((r) => r.decades[d] && r.decades[d].events.some((e) => e.id === o.event.id)).length;
       if (o.event.tally) h += `<p>${n} ${esc(o.event.tally)}. With protection it cost ${money(o.event.boughtCost)}. Without it, ${money(o.event.skipCost)}.</p>`;
+      h += `</section>`;
       return;
     }
     const hitRows = board.filter((r) => r.decades[d] && r.decades[d].events.some((e) => e.id === o.event.id));
@@ -411,7 +416,7 @@ function summaryHtml() {
       if (!r) return "";
       const e = r.decades[d].events.find((x) => x.id === o.event.id);
       const note = (t) => (e.bought && t ? ` <span class="nt">(${esc(t)})</span>` : "");
-      return `<div class="cd"><div class="k">${e.bought ? "BOUGHT IT" : "SKIPPED IT"}</div><p class="who">${esc(r.name)}${npc(r)}</p>
+      return `<div class="cd"><div class="k2">${e.bought ? "Bought" : "Skipped"} ${esc(o.noun)} and ${esc(o.event.had)}</div><p class="who">${esc(r.name)}${npc(r)}</p>
         <table class="rc">
           <tr><td>${esc(e.bill)}</td><td>${money(e.fullCost)}</td></tr>
           <tr><td>The policy paid${note(e.paidNote)}</td><td>${money(e.insurerPaid)}</td></tr>
@@ -420,15 +425,15 @@ function summaryHtml() {
         <p class="sm">Premiums they paid for it in their ${dec.key}: ${money(e.bought ? o.premium * CONFIG.years : 0)}</p>
         <p>Total savings at ${dec.endAge}: <b class="${r.decades[d].end < 0 ? "neg" : ""}">${money(r.decades[d].end)}</b></p></div>`;
     };
-    h += `<p>${esc(o.event.text)}</p><div class="cards">${card(hitRows.find((r) => r.decades[d].events.find((x) => x.id === o.event.id).bought))}${card(hitRows.find((r) => !r.decades[d].events.find((x) => x.id === o.event.id).bought))}</div>`;
+    h += `<p>${esc(o.event.happened)}: one who bought ${esc(o.noun)} and one who skipped it.</p><div class="cards">${card(hitRows.find((r) => r.decades[d].events.find((x) => x.id === o.event.id).bought))}${card(hitRows.find((r) => !r.decades[d].events.find((x) => x.id === o.event.id).bought))}</div></section>`;
   });
   const top = real[0], bottom = real[real.length - 1];
-  h += `<div class="cards three">
+  h += `<section><div class="lab">Insurance summary: the whole class so far</div><div class="cards three">
       <div class="cd"><div class="k">CLASS PAID IN</div><div class="v">${money(tot.paidIn)}</div></div>
       <div class="cd"><div class="k">CLASS GOT BACK</div><div class="v">${money(tot.gotBack)}</div></div>
       <div class="cd"><div class="k">${tot.kept >= 0 ? "INSURANCE COMPANY KEPT" : "COMPANY PAID OUT MORE BY"}</div><div class="v">${money(Math.abs(tot.kept))}</div></div>
-    </div>`;
-  if (top) h += `<p>Highest savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>.</p>`;
+    </div></section>`;
+  if (top) h += `<section><div class="lab">Class score summary</div><p>Highest total savings: <b>${esc(top.name)}</b>, ${money(top.savings)}. Lowest: <b>${esc(bottom.name)}</b>, <span class="${bottom.savings < 0 ? "neg" : ""}">${money(bottom.savings)}</span>.</p></section>`;
   return h + `</div>`;
 }
 
@@ -485,13 +490,28 @@ function drawSpread() {
     g += `<circle cx="${q.cx}" cy="${q.cy}" r="${r - Math.max(3, r * 0.32) / 2 - 1}" fill="${fill}"/>`;
   });
   // name everyone below zero, each on its own line above the dots so the labels can't collide
-  const under = placed.filter((q) => q.p.savings < 0).sort((a, b) => a.cx - b.cx);
-  const top = under.length ? Math.min(...under.map((q) => q.cy)) - r : 0;
-  under.forEach((q, i) => {
-    const ly = Math.max(f * 1.6, top - f * 1.2 - (under.length - 1 - i) * f * 1.5);
+  const under = placed.filter((q) => q.p.savings < 0).sort((a, b) => b.cx - a.cx); // right to left
+  const ruler = document.createElement("canvas").getContext("2d");
+  ruler.font = `700 ${f}px Calibri, "Segoe UI", Helvetica, Arial, sans-serif`;
+  const labels = [];
+  under.forEach((q) => {
     const tag = tagFor(q.p);
+    const x0 = q.cx - f * 0.2;
+    const x1 = x0 + ruler.measureText(`${q.p.name} ${money(q.p.savings)}  ${tag}`).width + f * 0.5;
+    const inPath = placed.filter((o) => o !== q && o.cx + r > x0 && o.cx - r < x1);
+    let ly = Math.min(q.cy - r - f * 0.9, ...inPath.map((o) => o.cy - r - f * 0.7));
+    for (let moved = true; moved; ) {
+      moved = false;
+      for (const b of labels) {
+        const touches = x0 < b.x1 && x1 > b.x0 && Math.abs(ly - b.ly) < f * 1.4;
+        const crossesLeader = b.cx > x0 && b.cx < x1 && ly > b.ly;
+        if (touches || crossesLeader) { ly = b.ly - f * 1.5; moved = true; }
+      }
+    }
+    ly = Math.max(f * 1.6, ly);
+    labels.push({ x0, x1, ly, cx: q.cx });
     g += `<line x1="${q.cx}" y1="${q.cy - r - 3}" x2="${q.cx}" y2="${ly + f * 0.3}" stroke="#8C2F2F" stroke-width="1.5"/>`;
-    g += `<text x="${q.cx - f * 0.2}" y="${ly}" font-size="${f}" stroke="#fff" stroke-width="${f * 0.4}" stroke-linejoin="round" paint-order="stroke"><tspan font-weight="700">${esc(q.p.name)}</tspan><tspan style="fill:#8C2F2F" font-weight="700"> ${money(q.p.savings)}</tspan>${tag ? `<tspan style="fill:#5B6475">  ${esc(tag)}</tspan>` : ""}</text>`;
+    g += `<text x="${x0}" y="${ly}" font-size="${f}" stroke="#fff" stroke-width="${f * 0.4}" stroke-linejoin="round" paint-order="stroke"><tspan font-weight="700">${esc(q.p.name)}</tspan><tspan style="fill:#8C2F2F" font-weight="700"> ${money(q.p.savings)}</tspan>${tag ? `<tspan style="fill:#5B6475">  ${esc(tag)}</tspan>` : ""}</text>`;
   });
   // legend
   const ly = H - f * 0.5; const dot = (cx, fill, ring) => `${ring ? `<circle cx="${cx}" cy="${ly - f * 0.33}" r="${f * 0.42}" fill="none" stroke="#C8972B" stroke-width="3"/>` : ""}<circle cx="${cx}" cy="${ly - f * 0.33}" r="${f * 0.3}" fill="${fill}"/>`;
@@ -517,7 +537,7 @@ function drawControls() {
       ? `<button class="go" data-act="open" data-d="${next}">Open the ${CONFIG.decades[next].key}</button><button data-act="skip" data-d="${next}">Skip the ${CONFIG.decades[next].key}</button>`
       : `<button class="go" data-act="final">Show the ending</button>`;
   } else main = `<span>Game over.</span>`;
-  const views = !m ? "" : ["lobby", "board", "tails", "spread", "summary", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
+  const views = !m ? "" : ["lobby", "board", "summary", "tails", "spread", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
     + (m && B.view === "spread" ? `<button data-act="goal" class="${B.goal ? "on" : ""}">Goal line</button>` : "");
   let qb = "";
   if (m) {

@@ -29,7 +29,7 @@ export const CONFIG = {
       key: "20s",
       title: "Your 20s",
       endAge: 30,
-      intro: "Assume that you're 20 years old and you've just moved out and you're living on your own. You have a decent job that covers your taxes and living expenses, but your job doesn't provide health insurance, and you no longer qualify for your parents' health insurance due to a change in the law.",
+      intro: "You're 20 years old and you've just moved out and you're living on your own. You have a decent job that covers your taxes and living expenses, but your job doesn't provide health insurance, and you no longer qualify for your parents' health insurance due to a change in the law.",
       payLabel: "You make",
       make: 50000,
       living: 45000,
@@ -39,6 +39,7 @@ export const CONFIG = {
         {
           id: "health",
           short: "Health",
+          noun: "health insurance",
           name: "Health insurance",
           premium: 3000,
           plain: "Covers you if you have a serious accident or illness.",
@@ -48,6 +49,8 @@ export const CONFIG = {
             id: "accident",
             big: true,
             text: "A serious accident: surgery and a week in the hospital.",
+            happened: "A serious accident happened to two people",
+            had: "had the accident",
             short: "Accident", // the word used on the scoreboard's column heading and row tags
             bill: "The hospital bill", // first line of the receipt
             ownNote: "their plan's out-of-pocket limit", // explains the insured person's share
@@ -89,6 +92,7 @@ export const CONFIG = {
         {
           id: "disability",
           short: "Disability",
+          noun: "disability insurance",
           name: "Disability insurance",
           premium: 1500,
           plain: "Replaces part of your pay if an illness or injury keeps you from working.",
@@ -98,6 +102,8 @@ export const CONFIG = {
             id: "disability",
             big: true,
             text: "You couldn't work for five years.",
+            happened: "Two people couldn't work for five years",
+            had: "couldn't work",
             short: "Couldn't work",
             bill: "Five years of lost pay",
             paidNote: "60% of their pay",
@@ -120,6 +126,7 @@ export const CONFIG = {
         {
           id: "life",
           short: "Life",
+          noun: "life insurance",
           name: "Life insurance on you and your partner",
           premium: 1200,
           plain: "Pays the surviving partner if either of you dies.",
@@ -129,6 +136,8 @@ export const CONFIG = {
             id: "partner",
             big: true,
             text: "Your partner died. The household lost that income.",
+            happened: "Two people lost their partner",
+            had: "lost their partner",
             short: "Partner died",
             bill: "The income the household lost",
             skipCost: 500000,
@@ -141,7 +150,7 @@ export const CONFIG = {
       key: "50s",
       title: "Your 50s",
       endAge: 60,
-      intro: "Welcome to your 50s. Congratulations, your mortgage is paid off. And for the first time, nobody requires that you insure your house.",
+      intro: "Welcome to your 50s. Congratulations, your mortgage is paid off! And for the first time, nobody requires that you insure your house.",
       payLabel: "Together you make",
       make: 100000,
       living: 84000,
@@ -150,6 +159,7 @@ export const CONFIG = {
         {
           id: "home",
           short: "Home",
+          noun: "homeowners insurance",
           name: "Homeowners insurance",
           premium: 1500,
           plain: "Pays to repair or rebuild your house after things like a fire, a storm, a burst pipe or a break-in.",
@@ -159,6 +169,8 @@ export const CONFIG = {
             id: "fire",
             big: true,
             text: "Your house burned down.",
+            happened: "Two people's houses burned down",
+            had: "had the fire",
             short: "Fire",
             bill: "The cost to rebuild",
             ownNote: "the deductible",

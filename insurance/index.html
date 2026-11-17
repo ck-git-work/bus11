@@ -305,7 +305,7 @@ function decadeView(d) {
 
 function decadeLines(row) {
   let h = "";
-  if (row.interest) h += `<tr><td>Interest on what you owed</td><td class="neg">${signed(row.interest)}</td></tr>`;
+  if (row.interest) h += `<tr><td>Interest on what you owed</td><td class="neg">${signed(row.interest)}</td></tr><tr class="sub"><td colspan="2">Debt doubles over ten years, which is about 7% a year.</td></tr>`;
   if (row.status === "skipped") {
     h += `<tr><td>A quiet decade. You saved ${money(row.yearly)} a year for ${CONFIG.years} years</td><td>${signed(row.saved)}</td></tr>`;
     return h;
