@@ -68,7 +68,7 @@ export const CONFIG = {
   // Each slide is a title and a few lines. An empty list hides the Slides button at that point.
   // PLACEHOLDERS until Chris's slides are settled in the deck: bracketed lines are not his words.
   // The deck's insurance slides, word for word (moved in 2026-11-17). A slide can have: lines (paragraphs),
-  // panels (label, optional lead, text), a band (the takeaway strip) and bullets (a gold-bulleted list).
+  // panels (label, optional lead, text), a band (the takeaway strip) and bullets (a gold-bulleted list). In bullets and lines, **two stars** around words make them bold.
   slides: {
     0: [
       {
@@ -152,12 +152,12 @@ export const CONFIG = {
       {
         title: "Insurance takeaways",
         bullets: [
-          "New Powerful Idea: Insurance exists for catastrophes, not wealth accumulation.",
-          "Buy insurance when: 1) it's legally required or 2) when you can’t bear a loss or the loss would significantly alter your lifestyle in a way you couldn’t recover from. Anything outside of that—small losses, losses that won’t alter your end goals in life, for example—you should pay for yourself.",
-          "Hope you never have to collect. Most years you pay but you get nothing back—that is the good outcome.",
-          "Insurance runs on uncertainty. Nobody can insure a loss that is certain to happen.",
-          "The insurance company exists to keep more than it pays out. That is an insurance company’s business model and they tend to be pretty decent at it. Even so, it can be a good deal for you.",
-          "Insurance is not an investment. People will try to sell it to you as one.",
+          "**New Powerful Idea: Insurance exists for catastrophes, not wealth accumulation.**",
+          "**Buy insurance when:** 1) it's legally required or 2) when you can’t bear a loss or the loss would significantly alter your lifestyle in a way you couldn’t recover from. Anything outside of that—small losses, losses that won’t alter your end goals in life, for example—you should pay for yourself.",
+          "**Hope you never have to collect.** Most years you pay but you get nothing back—that is the good outcome.",
+          "**Insurance runs on uncertainty.** Nobody can insure a loss that is certain to happen.",
+          "**The insurance company exists to keep more than it pays out.** That is an insurance company’s business model and they tend to be pretty decent at it. Even so, it can be a good deal for you.",
+          "**Insurance is not an investment.** People will try to sell it to you as one.",
         ],
       },
     ],

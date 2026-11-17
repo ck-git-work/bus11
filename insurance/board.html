@@ -369,11 +369,13 @@ function slidesHtml() {
   const sl = list[i];
   const pans = (sl.panels || []).length
     ? `<div class="pans">${sl.panels.map((p) => `<div class="pan"><div class="lb">${esc(p.label)}</div>${p.lead ? `<div class="ld">${esc(p.lead)}</div>` : ""}<p>${esc(p.text)}</p></div>`).join("")}</div>` : "";
-  const lines = (sl.lines || []).length ? `<div class="lines">${sl.lines.map((l) => `<p>${esc(l)}</p>`).join("")}</div>` : "";
-  const bullets = (sl.bullets || []).length ? `<ul>${sl.bullets.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : "";
+  const lines = (sl.lines || []).length ? `<div class="lines">${sl.lines.map((l) => `<p>${rich(l)}</p>`).join("")}</div>` : "";
+  const bullets = (sl.bullets || []).length ? `<ul>${sl.bullets.map((l) => `<li>${rich(l)}</li>`).join("")}</ul>` : "";
   const band = sl.band ? `<div class="band">${esc(sl.band)}</div>` : "";
   return `<div class="slide"><h1>${esc(sl.title)}</h1>${pans}${lines}${bullets}${band}</div>`;
 }
+// Slide text with **bold** words: escaped first, then the stars become bold tags.
+function rich(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"); }
 // Makes a slide's text as large as fits the screen: starts big and steps down until nothing runs past the bottom.
 function fitSlide(v) {
   const el = v.querySelector(".slide");
