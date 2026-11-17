@@ -23,6 +23,8 @@
   #view { flex: 1; min-height: 0; padding: 1vh 1.4vw; display: flex; flex-direction: column; }
   #controls { flex: none; border-top: 1px solid #D5DBE5; background: var(--panel); padding: 6px 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 15px; }
   #controls.viewer { display: none; }
+  #controls.pre { background: #FBF4DE; border-top: 3px solid var(--gold); }
+  #controls .stage { font: 700 12px Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--navy); background: #fff; border: 1px solid var(--gold); border-radius: 5px; padding: 5px 8px; }
   #controls button { font: 15px Calibri, "Segoe UI", sans-serif; padding: 7px 12px; border-radius: 7px; border: 1px solid var(--navy); background: #fff; color: var(--navy); cursor: pointer; }
   #controls button.go { background: var(--gold); border-color: var(--gold); font-weight: 700; font-size: 17px; padding: 8px 18px; }
   #controls button.on { background: var(--navy); color: #fff; }
@@ -635,10 +637,9 @@ function drawControls() {
   if (!B.gameId || !m) main = `<button class="go" data-act="newGame">New game</button>`;
   else if (m.phase === "lobby") {
     const sc = scene();
-    const skip = `<button data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button>`;
-    if (!sc) main = `<button class="go" data-act="draw1">Opening scene: draw round 1</button>${skip}`;
+    if (!sc) main = `<button class="go" data-act="draw1">Opening scene: draw round 1</button><button data-act="open" data-d="0" data-confirm="Skip the opening scene and open the ${CONFIG.decades[0].key}?">Skip the scene: open the ${CONFIG.decades[0].key}</button>`;
     else if (q && q.state === "open") main = `<button class="go" data-act="qclose">Close question, show answers</button>`;
-    else if (sc.round === 1 && sc.state === "revealed") main = `<button class="go" data-act="qopen">Open question</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw1">Draw again</button>${skip}`;
+    else if (sc.round === 1 && sc.state === "revealed") main = `<button class="go" data-act="qopen">Open question</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw1">Draw again</button>`;
     else if (sc.round === 1) {
       // One click starts round 2. Each button shows its price; one that would lose money is outlined in red and says so.
       const pm = priceMath(currentPrice());
@@ -649,7 +650,7 @@ function drawControls() {
         <label>or type a price: <input id="price" inputmode="numeric" style="min-width:100px;width:100px" value="${money(currentPrice())}"></label>
         <button data-act="draw2">Draw at that price</button>
         <span id="pricemath" class="math${pm.kept < 0 ? " neg" : ""}" style="${pm.kept < 0 ? "color:var(--debt)" : ""}">${pm.text}</span>
-        <button data-act="split" class="${B.split ? "on" : ""}">Show the even split</button><button data-act="qopen">Ask again</button>${skip}`;
+        <button data-act="split" class="${B.split ? "on" : ""}">Show the even split</button><button data-act="qopen">Ask again</button>`;
     } else main = `<button class="go" data-act="open" data-d="0">Open the ${CONFIG.decades[0].key}</button><button data-act="showname" class="${B.showName ? "on" : ""}">Show the name</button><button data-act="draw2again">Draw round 2 again</button>`;
   }
   else if (m.phase === "open") main = `<button class="go" data-act="close">Close the ${CONFIG.decades[m.decade].key}</button>`;
@@ -659,7 +660,8 @@ function drawControls() {
       ? `<button class="go" data-act="open" data-d="${next}">Open the ${CONFIG.decades[next].key}</button><button data-act="skip" data-d="${next}">Skip the ${CONFIG.decades[next].key}</button>`
       : `<button class="go" data-act="final">Show the ending</button>`;
   } else main = `<span>Game over.</span>`;
-  const views = !m ? "" : ["lobby", ...(scene() ? ["scene"] : []), "board", "summary", "tails", "spread", "question"].map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", scene: "Opening scene", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
+  const pre = !!m && m.phase === "lobby";
+  const views = !m ? "" : (pre ? ["lobby", ...(scene() ? ["scene"] : []), "question"] : ["lobby", "board", "summary", "tails", "spread", "question"]).map((v) => `<button data-act="view" data-v="${v}" class="${B.view === v ? "on" : ""}">${{ lobby: "Join screen", scene: "Opening scene", board: "Leaderboard", tails: "Top and bottom", spread: "Distribution", summary: "Summary", question: "Question" }[v]}</button>`).join("")
     + (m && B.view === "spread" ? `<button data-act="goal" class="${B.goal ? "on" : ""}">Goal line</button>` : "");
   let qb = "";
   if (m && !(m.phase === "lobby" && scene())) { // during the opening scene the gold button handles the question
@@ -671,6 +673,7 @@ function drawControls() {
       <label>Question: <input id="prompt" value="${esc(B.prompt)}"></label>
       <button data-act="manage" class="${B.manage ? "on" : ""}">Remove a player…</button>
       ${m.phase === "lobby" ? `<button data-act="test">Add 10 test players</button>` : ""}
+      ${m.phase === "lobby" && scene() && !(scene().round === 2 && scene().state === "revealed") ? `<button data-act="open" data-d="0" data-confirm="Leave the opening scene now and open the ${CONFIG.decades[0].key}?">Leave the scene: open the ${CONFIG.decades[0].key}</button>` : ""}
       ${m.phase === "closed" ? `<button data-act="reopen">Reopen the ${CONFIG.decades[m.decade].key} (deal again)</button>` : ""}
       ${m.phase === "final" ? `<button data-act="unfinal">Back to the last decade</button>` : ""}
       <button class="warn" data-act="wipe">Delete this game's data</button>
@@ -678,7 +681,9 @@ function drawControls() {
     </div>`;
   const focusPrompt = document.activeElement && (document.activeElement.id === "prompt" || document.activeElement.id === "price");
   if (focusPrompt) return; // don't redraw while Chris is typing the question
-  c.innerHTML = `${main}<span class="sep"></span>${views}<span class="sep"></span>${qb}${m ? `<span class="sep"></span><button data-act="more" class="${B.more ? "on" : ""}">More</button>` : ""}${more}`;
+  c.className = pre ? "pre" : "";
+  const stage = !m ? "" : `<span class="stage">${pre ? "Before the game: opening scene" : "The game"}</span>`;
+  c.innerHTML = `${stage}${main}<span class="sep"></span>${views}<span class="sep"></span>${qb}${m ? `<span class="sep"></span><button data-act="more" class="${B.more ? "on" : ""}">More</button>` : ""}${more}`;
 }
 
 // A double-click must not run two steps. The gold button changes meaning the moment it is
@@ -690,6 +695,7 @@ document.addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-act]");
   if (!b || !B.host) return;
   const a = b.dataset.act;
+  if (b.dataset.confirm && !confirm(b.dataset.confirm)) return;
   if (GROUPS[a]) {
     if (B.offline) return; // see the offline bar
     if (Date.now() - (lastStep[GROUPS[a]] || 0) < 1500) return;
