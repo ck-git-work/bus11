@@ -257,7 +257,7 @@ function sceneView(sc) {
   let lines;
   if (sc.round === 2) {
     lines = mine
-      ? [CONFIG.scene.disaster, `But you're covered. ${CONFIG.scene.organizer} pays you the ${money(stake)}.`, `You paid ${money(price)}. You have ${money(stake - price)}.`]
+      ? [CONFIG.scene.disaster, `But you're covered. ${CONFIG.scene.organizer} covers your ${money(stake)} loss.`, `You paid ${money(price)}. You have ${money(stake - price)}.`]
       : [`You paid ${money(price)}.`, `You have ${money(stake - price)}.`];
   } else {
     lines = mine ? [CONFIG.scene.disaster, `You have ${money(0)}.`] : [`You still have ${money(stake)}.`];

@@ -144,6 +144,19 @@
   .qv { flex: 1; display: flex; flex-direction: column; gap: 2vh; min-height: 0; font-size: clamp(18px, 2vw, 36px); }
   .qv h1 { font: 700 clamp(28px, 3.6vw, 62px) Arial, sans-serif; margin: 0; }
   .qv .chip { font-variant-numeric: tabular-nums; }
+  /* the Slides view: the deck's teaching slides (title, tinted panels, takeaway band, or a list) */
+  .slide { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 2.4vh; padding-top: 1vh; font-size: clamp(17px, min(2.05vw, 3.3vh), 44px); line-height: 1.28; }
+  .slide h1 { font: 700 1.62em/1.12 Arial, sans-serif; margin: 0 0 0.4vh; }
+  .slide p { margin: 0; }
+  .slide .lines { display: flex; flex-direction: column; gap: 2.6vh; font-size: 1.12em; max-width: 46em; }
+  .slide .pans { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 1.1vw; }
+  .slide .pan { background: #E6EBF3; border-radius: 12px; padding: 2vh 1.3vw 2.4vh; }
+  .slide .pan .lb { font: 700 0.68em Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 1vh; }
+  .slide .pan .ld { font-weight: 700; font-size: 1.14em; margin-bottom: 0.6vh; }
+  .slide .pan p { color: #3F4A63; }
+  .slide .band { margin-top: auto; background: #F6EFD9; border-radius: 12px; padding: 1.7vh 1.5vw; font-weight: 700; font-size: 1.08em; }
+  .slide ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 1.5vh; font-size: 0.94em; }
+  .slide li::marker { color: var(--gold); }
   .empty { color: var(--muted); font-size: clamp(20px, 2.4vw, 40px); margin: auto; text-align: center; }
 </style>
 </head>
@@ -353,7 +366,24 @@ function slideAt() { // the current slide's position, kept inside the list
 function slidesHtml() {
   const { list, i } = slideAt();
   if (!list.length) return `<div class="empty">No slides at this point in the game.</div>`;
-  return `<div class="scene"><h1>${esc(list[i].title)}</h1>${(list[i].lines || []).map((l) => `<p>${esc(l)}</p>`).join("")}</div>`;
+  const sl = list[i];
+  const pans = (sl.panels || []).length
+    ? `<div class="pans">${sl.panels.map((p) => `<div class="pan"><div class="lb">${esc(p.label)}</div>${p.lead ? `<div class="ld">${esc(p.lead)}</div>` : ""}<p>${esc(p.text)}</p></div>`).join("")}</div>` : "";
+  const lines = (sl.lines || []).length ? `<div class="lines">${sl.lines.map((l) => `<p>${esc(l)}</p>`).join("")}</div>` : "";
+  const bullets = (sl.bullets || []).length ? `<ul>${sl.bullets.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : "";
+  const band = sl.band ? `<div class="band">${esc(sl.band)}</div>` : "";
+  return `<div class="slide"><h1>${esc(sl.title)}</h1>${pans}${lines}${bullets}${band}</div>`;
+}
+// Makes a slide's text as large as fits the screen: starts big and steps down until nothing runs past the bottom.
+function fitSlide(v) {
+  const el = v.querySelector(".slide");
+  if (!el) return;
+  let size = Math.min(window.innerWidth * 0.027, window.innerHeight * 0.046, 56);
+  for (let k = 0; k < 40; k++) {
+    el.style.fontSize = size + "px";
+    if (el.scrollHeight <= el.clientHeight + 1 || size <= 15) break;
+    size *= 0.96;
+  }
 }
 function slideStep(by) { if (B.view !== "slides") return; B.slide += by; render(); }
 
@@ -368,7 +398,7 @@ function render() {
   else if (B.view === "scene") v.innerHTML = sceneHtml();
   else if (B.view === "question") v.innerHTML = questionHtml();
   else if (B.view === "summary") v.innerHTML = summaryHtml();
-  else if (B.view === "slides") v.innerHTML = slidesHtml();
+  else if (B.view === "slides") { v.innerHTML = slidesHtml(); fitSlide(v); }
   else if (B.view === "spread") { v.innerHTML = `<div class="spread"><h1 id="sph"></h1><div class="plot" id="plot"></div></div>`; drawSpread(); }
   else { v.innerHTML = boardHtml(B.view === "tails"); sizeRows(); }
 }
@@ -555,7 +585,7 @@ function summaryHtml() {
       if (!r) return "";
       const e = r.decades[d].events.find((x) => x.id === o.event.id);
       const note = (t) => (e.bought && t ? ` <span class="nt">(${esc(t)})</span>` : "");
-      return `<div class="cd"><div class="k2">${e.bought ? "Bought" : "Skipped"} ${esc(o.noun)} and ${esc(o.event.had)}</div><p class="who">${esc(r.name)}${npc(r)}</p>
+      return `<div class="cd"><div class="k2">${e.bought ? "Bought" : "Skipped"} ${esc(o.noun)} and ${esc(o.event.had)}</div>
         <table class="rc">
           <tr><td>${esc(e.bill)}</td><td>${money(e.fullCost)}</td></tr>
           <tr><td>The policy paid${note(e.paidNote)}</td><td>${money(e.insurerPaid)}</td></tr>
@@ -665,7 +695,8 @@ function wholeGameHtml() {
   const board = leaderboard(players(), state(), N_DECADES);
   const real = board.filter((r) => !r.house);
   const tot = classTotals(board);
-  const cell = (r) => (r ? `<td>${esc(r.name)}${npc(r)}</td><td class="n${r.savings < 0 ? " neg" : ""}">${money(r.savings)}</td>` : `<td>–</td><td></td>`);
+  // No names here (Chris, 2026-11-17): the Summary shows examples and class numbers, not who it was.
+  const cell = (r) => (r ? `<td></td><td class="n${r.savings < 0 ? " neg" : ""}">${money(r.savings)}</td>` : `<td>–</td><td></td>`);
   let rows = "";
   CONFIG.decades.forEach((dec, d) => {
     const o = dec.offers.find((x) => x.event.big);

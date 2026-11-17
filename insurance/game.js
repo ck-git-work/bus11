@@ -32,8 +32,8 @@ export const CONFIG = {
     // The proposal, on the scoreboard before the question opens: a heading, the offer, then the question in bold.
     offer: [
       "Let's rewind time and let me make you a proposal:",
-      "Before anything bad happens to one of us, I want to offer you a chance to avoid losing your entire nest egg. If the bad thing happens to you, I'll pay you $50,000. For providing you this service, though, I expect to collect a fee.",
-      "What would you pay me to guarantee that you can keep your $50,000 nest egg even if the bad thing happens to you?",
+      "Before anything bad happens to one of us, I want to offer you a chance to avoid losing your entire nest egg. If the bad thing happens to you, I'll cover your $50,000 loss. For providing you this service, though, I expect to collect a fee.",
+      "What would you pay me to cover your $50,000 loss and protect your nest egg, even if the bad thing happens to you?",
     ],
     // The scoreboard after the round 2 draw. Nothing else is on that screen.
     again: "Tragedy has struck once again and the bad thing happened.",
@@ -51,36 +51,115 @@ export const CONFIG = {
       ["Coverage", "the protection provided by a policy"],
       ["Insured", "the person the policy protects"],
     ],
-    // The last screen before the 20s: a PLACEHOLDER to remind Chris to introduce the game. First line is the heading.
+    // The last screen before the 20s: Chris introduces the game (his words, 2026-11-17, trimmed for the screen). First line is the heading.
     intro: [
-      "[Game intro: placeholder]",
-      "We're going to play a game.",
-      "After each decade, a scoreboard shows everyone's net worth.",
-      "The goal is whatever you decide.",
+      "Why don't we travel through time again?",
+      "We've traveled to space in this class and we've also traveled through time. Just as a reminder, this is a personal finance class.",
+      "We're all going to start this game at the age of 20 and we're going to live out the next 4 decades of our lives together.",
+      "After each decade, a scoreboard will show each person's net worth. The highest net worth goes at the top and the lowest goes at the bottom.",
+      "I'm not saying the goal in life is the highest net worth, but that's the way this game is going to work today.",
     ],
     margin: 0.2, // the "even split plus" button adds this much on top of the even split
-    prompt: "What would you pay Chris to guarantee that you can keep your $50,000 nest egg even if the bad thing happens to you?", // on the phones and over the answers
+    prompt: "What would you pay Chris to cover your $50,000 loss and protect your nest egg, even if the bad thing happens to you?", // on the phones and over the answers
   },
 
   // Teaching slides for the scoreboard's Slides view. One list for each point in the game:
   // 0 to 3 = after that decade closes (20s, 30s, 40s, 50s); final = after "Show the ending".
   // Each slide is a title and a few lines. An empty list hides the Slides button at that point.
   // PLACEHOLDERS until Chris's slides are settled in the deck: bracketed lines are not his words.
+  // The deck's insurance slides, word for word (moved in 2026-11-17). A slide can have: lines (paragraphs),
+  // panels (label, optional lead, text), a band (the takeaway strip) and bullets (a gold-bulleted list).
   slides: {
     0: [
-      { title: "Auto insurance", lines: ["[Required. Chris's words go here.]"] },
-      { title: "Health insurance", lines: ["[A choice. Chris's words go here.]"] },
-      { title: "Phone protection", lines: ["[Also a choice. It stands for any product insurance. Chris's words go here.]"] },
+      {
+        title: "Auto insurance",
+        panels: [
+          { label: "COVERS", text: "Property damage and physical injuries you cause to other people (liability). Your own car too, if you add collision and comprehensive." },
+          { label: "DOESN'T COVER", text: "Your own car, if you carry liability only. Breakdowns and wear and tear." },
+          { label: "WHERE YOU GET IT", text: "Straight from an insurance company, or through an agent. Prices vary a lot, so compare quotes." },
+        ],
+        band: "Required by law in California. That is why the game never asked.",
+      },
+      {
+        title: "Health insurance",
+        panels: [
+          { label: "COVERS", text: "Doctor visits, prescriptions, hospital stays and surgery. You pay a share, up to a yearly out-of-pocket limit." },
+          { label: "DOESN'T COVER", text: "Usually dental and vision, which are separate plans. Long-term care if you become seriously ill or disabled. Care outside the plan's network can cost much more." },
+          { label: "WHERE YOU GET IT", text: "A parent's plan until 26. An employer. Covered California. Medi-Cal, depending on income. Medicare, depending on age." },
+        ],
+        band: "A choice in the game. One hospital stay can cost more than years of premiums.",
+      },
+      {
+        title: "Product protection plans (cell phone)",
+        panels: [
+          { label: "COVERS", text: "Repair or replacement if a product breaks, and sometimes if it is lost or stolen. Usually with a fee for each claim." },
+          { label: "DOESN'T COVER", text: "Whatever the exclusions list says: often cosmetic damage. Many plans cap the number of claims in a year." },
+          { label: "WHERE YOU GET IT", text: "At the register or checkout, or from your phone carrier or the maker. Some credit cards include it." },
+        ],
+        band: "These plans usually insure against a loss you could pay for yourself.",
+      },
     ],
-    1: [{ title: "Disability insurance", lines: ["[Chris's words go here.]"] }],
+    1: [
+      {
+        title: "Disability insurance",
+        panels: [
+          { label: "COVERS", text: "Part of your paycheck, often about 60%, if an illness or injury keeps you from working." },
+          { label: "DOESN'T COVER", text: "All of your pay. The waiting period before payments start: about a week for California SDI, about three months for most long-term plans." },
+          { label: "WHERE YOU GET IT", text: "Short-term, up to a year: California SDI, taken out of most paychecks. Long-term: an employer's plan, or a policy you buy yourself." },
+        ],
+        band: "Your ability to earn is probably the biggest thing you own, depending on your age.",
+      },
+    ],
     2: [
-      { title: "Life insurance", lines: ["[Chris's words go here.]"] },
-      { title: "Insurance is not an investment", lines: ["[Chris's words go here.]"] },
+      {
+        title: "Life insurance",
+        panels: [
+          { label: "COVERS", text: "Pays a set amount to the people you name if you die while the policy is in force. Term life covers a set number of years." },
+          { label: "DOESN'T COVER", text: "You. It replaces your income for other people. Term life pays nothing if you outlive the term." },
+          { label: "WHERE YOU GET IT", text: "Often an employer provides a small policy as part of your benefits. You can also buy it on your own, from an agent or online." },
+        ],
+        band: "Life insurance is for the people who depend on your income (reminder: you are dead in the scenario where this pays out).",
+      },
+      {
+        title: "Insurance is not an investment, but people will try to sell it to you as one",
+        panels: [
+          { label: "TERM LIFE", lead: "Protection only", text: "Covers a set number of years, such as 20 or 30. It pays only if you die during that time. If you outlive it, it ends and pays nothing. Lowest priced coverage you can get." },
+          { label: "WHOLE LIFE", lead: "Protection plus savings", text: "Covers your whole life. Part of every payment goes into a cash value that grows slowly, part goes to pay premium. It costs many times more than term for the same payout." },
+        ],
+        band: "Protection and saving are two different jobs, in my opinion.",
+      },
     ],
-    3: [{ title: "Homeowners insurance", lines: ["[Chris's words go here.]"] }],
+    3: [
+      {
+        title: "Homeowners insurance",
+        panels: [
+          { label: "COVERS", text: "Your house and belongings after sudden damage: a fire (wildfires included), wind, a burst pipe or a break-in. Injuries to other people on your property." },
+          { label: "DOESN'T COVER", text: "Earthquakes and floods, which need separate policies. Wear and tear. The deductible, which you pay." },
+          { label: "WHERE YOU GET IT", text: "An insurance company or an agent. Renters can buy renters insurance for their belongings." },
+        ],
+        band: "Required by your lender while you have a mortgage. After that it is your choice.",
+      },
+    ],
     final: [
-      { title: "[Insurance takeaways: 4 or 5, to come]", lines: ["[Chris's words go here.]"] },
-      { title: "Is the goal really the most money possible?", lines: ["[Chris's questions go here.]"] },
+      {
+        title: "Is the goal really the most money possible?",
+        lines: [
+          "We played this as a game to maximize net worth, but is that really the goal in our lives?",
+          "I’m going to argue that insurance exists to protect us from some of life’s severe downside scenarios such as inability to work, significant medical event, or even the loss of a life partner.",
+          "Insurance allows us to help guarantee we won’t end up on the left side of the distribution we saw after each decade. It may mean we end up with less money, but that is the tradeoff we are making.",
+        ],
+      },
+      {
+        title: "Insurance takeaways",
+        bullets: [
+          "New Powerful Idea: Insurance exists for catastrophes, not wealth accumulation.",
+          "Buy insurance when: 1) it's legally required or 2) when you can’t bear a loss or the loss would significantly alter your lifestyle in a way you couldn’t recover from. Anything outside of that—small losses, losses that won’t alter your end goals in life, for example—you should pay for yourself.",
+          "Hope you never have to collect. Most years you pay but you get nothing back—that is the good outcome.",
+          "Insurance runs on uncertainty. Nobody can insure a loss that is certain to happen.",
+          "The insurance company exists to keep more than it pays out. That is an insurance company’s business model and they tend to be pretty decent at it. Even so, it can be a good deal for you.",
+          "Insurance is not an investment. People will try to sell it to you as one.",
+        ],
+      },
     ],
   },
 
@@ -98,12 +177,12 @@ export const CONFIG = {
       key: "20s",
       title: "Your 20s",
       endAge: 30,
-      intro: "You're 20 years old and you've just moved out and you're living on your own. You have a decent job that covers your taxes and living expenses, but your job doesn't provide health insurance, and you no longer qualify for your parents' health insurance due to a change in the law.",
+      intro: "You're 20 years old, you've just moved out, and you're living on your own. You have a decent job that covers your taxes and living expenses, but your job doesn't provide health insurance, and you no longer qualify for your parents' health insurance due to a change in the law.",
       payLabel: "You make",
       make: 50000,
       living: 45000,
       // The paragraph between the pay numbers and the choices: what is already paid, then what is left to decide.
-      already: "Since car insurance is required by law, you already pay monthly to insure your driving. But you have a couple of other choices to make when it comes to insurance in your 20s.",
+      already: "Since auto insurance is required by law, you already pay monthly to insure your driving. But you have a couple of other choices to make when it comes to insurance in your 20s.",
       offers: [
         {
           id: "health",
@@ -156,7 +235,7 @@ export const CONFIG = {
       payLabel: "Together you make",
       make: 70000,
       living: 62000,
-      already: "Once again, car insurance is required by law, and you already pay for it monthly. Now that you're a homeowner, your lender requires homeowners insurance, which you also pay for. Both are included in taxes and living above. You have one other insurance decision to make in your 30s: would you like disability insurance or not?",
+      already: "Once again, auto insurance is required by law, and you already pay for it monthly. Now that you're a homeowner, your lender requires homeowners insurance, which you also pay for. Both are included in taxes and living above. You have one other insurance decision to make in your 30s: would you like disability insurance or not?",
       offers: [
         {
           id: "disability",
@@ -225,7 +304,7 @@ export const CONFIG = {
       payLabel: "Together you make",
       make: 100000,
       living: 84000,
-      already: "You still have health insurance through work. Car insurance is still required by law, and you still pay for it. Taxes and living above no longer include homeowners insurance. You have another insurance choice to make in your 50s: do you want to continue to pay for homeowners insurance or not?",
+      already: "You still have health insurance through work. Auto insurance is still required by law, and you still pay for it. Taxes and living above no longer include homeowners insurance. You have another insurance choice to make in your 50s: do you want to continue to pay for homeowners insurance or not?",
       offers: [
         {
           id: "home",
