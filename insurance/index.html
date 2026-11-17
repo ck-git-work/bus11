@@ -323,7 +323,7 @@ function decadeLines(row) {
   row.events.forEach((e) => {
     h += `<tr><td>${esc(e.text)}</td><td${e.cost ? ' class="neg"' : ""}>${e.cost ? signed(-e.cost) : "$0"}</td></tr>`;
     const bill = e.bill ? `${esc(e.bill)}: ${money(e.fullCost)}. ` : "";
-    const yours = e.cost ? ` and you ${esc(e.ownVerb)} ${money(e.cost)}${e.ownNote ? ` (${esc(e.ownNote.replace(/^their /, "your "))})` : ""}` : "";
+    const yours = e.cost ? ` and you ${esc(e.ownVerb)} ${money(e.cost)}${esc(e.ownTail)}${e.ownNote ? ` (${esc(e.ownNote.replace(/^their /, "your "))})` : ""}` : "";
     h += `<tr class="sub"><td colspan="2">${bill}${e.bought ? `You were insured, so the policy paid ${money(e.insurerPaid)}${yours}.` : `You weren't insured, so the whole cost is yours.`}</td></tr>`;
   });
   return h;

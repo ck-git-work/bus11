@@ -101,13 +101,14 @@ export const CONFIG = {
           event: {
             id: "disability",
             big: true,
-            text: "You couldn't work for five years.",
+            text: "A serious injury: you couldn't work for five years.",
             happened: "Two people couldn't work for five years",
             had: "couldn't work",
             short: "Couldn't work",
             bill: "Five years of lost pay",
             paidNote: "60% of their pay",
-            ownVerb: "were short", // the insured person's share is pay that never came, not a bill they paid
+            ownVerb: "missed out on", // the insured person's share is pay that never came, not a bill they paid
+            ownTail: " of pay",
             skipCost: 200000,
             boughtCost: 80000,
           },
@@ -312,7 +313,7 @@ export function scorePlayer(player, state, closed) {
         if (hits[o.event.id]) {
           const cost = bought ? o.event.boughtCost : o.event.skipCost;
           const insurerPaid = bought ? o.event.skipCost - o.event.boughtCost : 0;
-          row.events.push({ id: o.event.id, big: !!o.event.big, text: o.event.text, short: o.event.short || "", bill: o.event.bill || "", paidNote: o.event.paidNote || "", ownNote: o.event.ownNote || "", ownVerb: o.event.ownVerb || "paid", bought, cost, insurerPaid, fullCost: o.event.skipCost });
+          row.events.push({ id: o.event.id, big: !!o.event.big, text: o.event.text, short: o.event.short || "", bill: o.event.bill || "", paidNote: o.event.paidNote || "", ownNote: o.event.ownNote || "", ownVerb: o.event.ownVerb || "paid", ownTail: o.event.ownTail || "", bought, cost, insurerPaid, fullCost: o.event.skipCost });
           gotBack += insurerPaid;
         }
       });
