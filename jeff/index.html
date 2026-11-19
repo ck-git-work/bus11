@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>BUS 11 Meet Jeff</title>
 <style>
-  :root { --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #5B6475; --bg: #F5F7FA; --card: #FFFFFF; --tint: #F6EFD9; --red: #B3261E; --blue: #8CB4DC; }
+  :root { --navy: #1B2A49; --gold: #C8972B; --lgold: #E4B94A; --muted: #5B6475; --bg: #F5F7FA; --card: #FFFFFF; --tint: #F6EFD9; --red: #B3261E; }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--navy); font: 18px/1.45 Calibri, "Segoe UI", Helvetica, Arial, sans-serif; }
@@ -15,24 +15,25 @@
   header .who { font-size: 16px; color: var(--lgold); white-space: nowrap; }
   main { max-width: 560px; margin: 0 auto; padding: 16px 16px 48px; }
   h1 { font: 700 28px/1.15 Arial, Helvetica, sans-serif; margin: 6px 0 8px; }
-  h2 { font: 700 19px Arial, Helvetica, sans-serif; margin: 0 0 6px; }
+  h2 { font: 700 21px/1.2 Arial, Helvetica, sans-serif; margin: 0 0 6px; }
   p { margin: 8px 0; }
   .muted { color: var(--muted); }
   .card { background: var(--card); border: 1px solid #DCE2EB; border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
-  .nums { width: 100%; border-collapse: collapse; }
-  .nums td { padding: 5px 0; vertical-align: baseline; }
-  .nums { table-layout: fixed; }
-  .nums td:first-child { width: 42%; }
-  .nums td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 12px; }
   main, .card, .fill p { overflow-wrap: anywhere; }
-  .stage { font: 700 13px Arial, Helvetica, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .stage.early { color: #3C6E9E; } .stage.middle { color: #9A6B12; } .stage.late { color: var(--red); }
-  .stands { background: var(--tint); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 17px; }
+  .nums { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .nums td { padding: 5px 0; vertical-align: baseline; }
+  .nums td:first-child { width: 46%; }
+  .nums td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 12px; }
+  .nums tr.total td { border-top: 2px solid var(--navy); padding-top: 7px; }
+  .nums tr.short td { color: var(--red); }
+  .label { font: 700 13px Arial, Helvetica, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 12px 0 2px; }
+  .label.red { color: var(--red); }
+  .stands { background: var(--tint); border-radius: 10px; padding: 10px 12px; margin-top: 12px; font-size: 17px; font-weight: 700; }
   button { font: 700 19px Arial, Helvetica, sans-serif; min-height: 54px; border-radius: 10px; border: 1.5px solid var(--navy); background: #fff; color: var(--navy); padding: 10px 14px; cursor: pointer; width: 100%; -webkit-tap-highlight-color: transparent; }
   button.primary { background: var(--gold); border-color: var(--gold); color: #1B2A49; margin-top: 6px; }
   .fill { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px; color: #fff; background: var(--red); }
   .fill .bigword { font: 700 56px/1.05 Arial, Helvetica, sans-serif; margin-bottom: 14px; }
-  .fill p { font-size: 22px; margin: 8px 0; max-width: 520px; }
+  .fill p { font-size: 21px; margin: 8px 0; max-width: 520px; }
   .fill button { margin-top: 26px; max-width: 420px; background: #fff; border-color: #fff; color: var(--red); }
   .neighbor { background: var(--navy); color: #fff; border-radius: 12px; padding: 16px; margin: 18px 0 10px; }
   .neighbor h2 { color: var(--lgold); }
@@ -44,9 +45,12 @@
 <main id="app"></main>
 <div class="fill hidden" id="fill"></div>
 <script>
-// ======================= ALL TEXT AND NUMBERS LIVE HERE (draft 1, 2026-11-19; Chris to wordsmith) =======================
-const JEFF = {
-  intro: "Jeff is 31 and lives in San Jose. He's an operations coordinator at a delivery company. He's not rich, but he's doing fine.",
+// ===================== ALL TEXT AND NUMBERS LIVE HERE (draft 2, 2026-11-19; Chris to wordsmith) =====================
+// Three screens per version: 1) Meet Jeff  2) what happens (red, full screen)  3) where it leaves him + find a neighbor.
+// In each money table, the last row is the monthly result; a row marked "total" gets a line above it.
+
+const YOUNG_JEFF = {   // the job-loss and illness Jeff (same person as the case)
+  intro: "Jeff is 31 and lives in San Jose. He's an operations coordinator at RTJ Inc, a freight forwarding company, where he's worked for 5 years.",
   numbers: [
     ["Pay", "$72,000 a year"],
     ["Take-home pay", "about $4,600 a month"],
@@ -55,107 +59,124 @@ const JEFF = {
     ["Credit cards", "$3,000, paid on time"],
     ["401(k)", "$12,000"]
   ],
-  startNote: "Rent is $1,800 for his half of a two-bedroom apartment. His car payment is $380. He always pays on time, and his credit is good."
+  note: "Rent is $1,800 for his half of a two-bedroom apartment. His car payment is $380."
 };
+
 const VERSIONS = {
   job: {
     label: "Job loss",
+    jeff: YOUNG_JEFF,
     shock: "Laid off",
-    shockLine: "In March, Jeff's company cuts a third of its staff. He's one of them.",
-    stages: [
-      { key: "early", tag: "Early · still paying on time", when: "Four months later",
-        text: "Unemployment pays $450 a week, about $1,950 a month: less than half his old take-home pay. His savings are gone in the first month. He keeps up with every bill by putting the gap on his cards.",
-        stands: "He owes $11,000 on his cards. He's still paying on time, and his credit is still good." },
-      { key: "middle", tag: "Middle · falling behind", when: "A year after the layoff",
-        text: "In month six he finds a new job, at $54,000: 75% of his old pay, about $3,500 a month after taxes. He keeps the apartment and the car and spends about $4,100 a month. The gap is smaller, but it never closes.",
-        stands: "He owes $15,000. He has missed two payments, one card jumped to a penalty rate, and the collection calls have started." },
-      { key: "late", tag: "Late · in collections", when: "Almost two years in",
-        text: "He tried a debt management plan, but eight months in, his car needed a $2,800 repair. With his cards closed and no savings, he missed two plan payments and the plan was canceled.",
-        stands: "He owes about $16,000. His accounts are in collections, and a collector has sued him." }
-    ]
+    shockLine: "RTJ's business has been slowing. One morning Jeff is called into the cafeteria with a third of his coworkers, thanked for his hard work, and told he no longer has a job.",
+    when: "Four months later",
+    story: "Unemployment pays $450 a week, the most California pays. His savings are gone in the first month. He keeps paying every bill on time by putting the gap on his credit cards.",
+    moneyTitle: "Jeff's month now",
+    money: [
+      ["Coming in: unemployment", "about $1,950"],
+      ["Going out: spending", "about $4,300"],
+      ["Short every month", "about $2,350", "total short"]
+    ],
+    stands: "He owes $11,000 on his cards. He's never missed a payment, but every month he falls further behind."
   },
   ill: {
     label: "Illness",
+    jeff: YOUNG_JEFF,
     shock: "Sick",
-    shockLine: "In March, Jeff collapses at work: a burst appendix, with complications.",
-    stages: [
-      { key: "early", tag: "Early · still paying on time", when: "Four months later",
-        text: "He's insured, but his share of the bills reaches his plan's $5,000 out-of-pocket limit. He's off work for ten weeks, and California's disability insurance pays only part of his paycheck. His savings are gone. The rest goes on his cards.",
-        stands: "He owes $9,000 on his cards. He's still paying on time, and his credit is still good." },
-      { key: "middle", tag: "Middle · falling behind", when: "A year later",
-        text: "He's back at work at full pay, but physical therapy and follow-up visits keep coming, and a $2,400 bill he thought insurance had covered goes to collections. Most months he spends more than he makes.",
-        stands: "He owes $14,000. He has missed two payments, one card jumped to a penalty rate, and the collection calls have started." },
-      { key: "late", tag: "Late · in collections", when: "Almost two years in",
-        text: "Complications send him back to the hospital for a second surgery. It's a new calendar year, so his out-of-pocket costs start over, and he misses another month of work.",
-        stands: "He owes about $16,000. His accounts are in collections, and the hospital's collector has sued him." }
-    ]
+    shockLine: "Jeff's appendix bursts at work. The surgery goes fine, but a serious infection follows, then a second surgery. His doctor says he can't work for five months.",
+    when: "Ten months later",
+    story: "While he was out for five months, his share of the hospital bills hit his plan's $5,000 out-of-pocket limit, and California's disability insurance replaced only about 70% of his pay. His savings covered part of it; the rest went on his cards. He's back at work now, but the infection keeps coming back. His sick days are used up, so he loses a couple of days' pay most months. And in January his insurance year started over, so the specialist visits and prescriptions are on him again.",
+    moneyTitle: "Jeff's month now",
+    money: [
+      ["Coming in: take-home pay, minus unpaid days", "about $4,200"],
+      ["Going out: spending", "about $4,300"],
+      ["Medical bills", "about $400"],
+      ["Card payments", "about $300"],
+      ["Short every month", "about $800", "total short"]
+    ],
+    stands: "He owes about $11,000 on his cards. He's working, but every month the hole gets deeper."
   },
   div: {
     label: "Divorce",
+    jeff: {
+      intro: "Jeff is 52 and lives in San Jose. He's an operations manager at RTJ Inc, a freight forwarding company. He and Alex have been married for 24 years, and their kids are grown.",
+      numbers: [
+        ["Pay", "$90,000 a year"],
+        ["Take-home pay", "about $5,600 a month"],
+        ["His half of their spending", "about $5,000 a month"],
+        ["Savings, together", "$20,000"],
+        ["401(k)s, together", "$240,000"],
+        ["Credit cards", "$4,000, paid on time"]
+      ],
+      note: "Alex earns about the same. They rent a three-bedroom house for $3,400 a month and split everything down the middle."
+    },
     shock: "Divorced",
-    shockLine: "In March, Jeff and his spouse, Alex, decide to split up after four years of marriage.",
-    stages: [
-      { key: "early", tag: "Early · still paying on time", when: "Four months later",
-        text: "Same pay, but now two households. Jeff moves into a $2,300 studio, $500 more than his share of the old place. The lawyer's $5,000 retainer goes on his card. Their joint card already had $4,000 on it.",
-        stands: "He owes $10,000 on his cards. He's still paying on time, and his credit is still good." },
-      { key: "middle", tag: "Middle · falling behind", when: "A year later",
-        text: "The divorce is final. The decree says Alex will pay off the joint card, but Alex stops paying. Both names are on the card, so the card company comes after Jeff.",
-        stands: "He owes $15,000, counting the joint card. He has missed two payments, one card jumped to a penalty rate, and the collection calls have started." },
-      { key: "late", tag: "Late · in collections", when: "Almost two years in",
-        text: "His company cuts everyone's hours for three months. On top of the higher rent and the lawyer's last bills, it's too much.",
-        stands: "He owes about $16,000. His accounts are in collections, and a collector has sued him." }
-    ]
+    shockLine: "After 24 years, Jeff and Alex decide to split up. Alex stays in the house. Jeff moves out.",
+    when: "Six months later",
+    story: "Everything they shared is split in two: the savings, the 401(k)s, the furniture. Jeff's half of the savings, $10,000, goes to his lawyer, and the last $2,000 of the bill goes on his card. Living alone costs more than living together.",
+    moneyTitle: "Jeff's month now",
+    money: [
+      ["Coming in: take-home pay", "about $5,600"],
+      ["Rent for a one-bedroom", "about $2,600"],
+      ["Car", "about $500"],
+      ["Everything else, no longer shared", "about $3,100"],
+      ["Short every month", "about $600", "total short"]
+    ],
+    stands: "His savings are gone and his 401(k) is half what it was. Every month he's about $600 short, and it goes on his cards."
   }
 };
+
 const NEIGHBOR = {
   title: "Now find a neighbor",
-  text: "Find someone whose Jeff had a different bad thing happen. What happened to yours? How did his fall look different? What was the same?"
+  text: "Find someone whose Jeff had something different happen. What happened to yours? How did his fall look different? What was the same?"
 };
-// ========================================================================================================================
+// ====================================================================================================================
 
 const $ = s => document.querySelector(s);
 const params = new URLSearchParams(location.search);
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 if (params.has('reset')) { try { localStorage.removeItem('jeff_v'); localStorage.removeItem('jeff_step'); } catch (e) {} }
-let v = params.get('v');
-if (!VERSIONS[v]) v = store('jeff_v');
+let v = params.get('v');                       // ?v=job|ill|div shows that version (for checking)
+const forced = !!VERSIONS[v];
+if (!forced) v = store('jeff_v');
 if (!VERSIONS[v]) { const keys = Object.keys(VERSIONS); v = keys[Math.floor(Math.random() * keys.length)]; store('jeff_v', v); }
 const ver = VERSIONS[v];
-let step = parseInt(params.get('step') || store('jeff_step') || '0', 10); if (isNaN(step) || step < 0 || step > 4) step = 0;   // ?step=N jumps there (for checking)
+let step = parseInt(params.get('step') || (forced ? '0' : store('jeff_step')) || '0', 10);   // ?step=0|1|2 jumps there
+if (isNaN(step) || step < 0 || step > 2) step = 0;
 
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-function startCard() {
-  return `<div class="card"><h1>Meet Jeff</h1><p>${esc(JEFF.intro)}</p>
-    <table class="nums">${JEFF.numbers.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>
-    <p class="muted">${esc(JEFF.startNote)}</p></div>`;
+function table(rows) {
+  return `<table class="nums">${rows.map(r => `<tr class="${esc(r[2] || '')}"><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>`;
 }
-function stageCard(i) {
-  const s = ver.stages[i];
-  return `<div class="card"><div class="stage ${s.key}">${esc(s.tag)}</div><h2>${esc(s.when)}</h2><p>${esc(s.text)}</p><div class="stands">${esc(s.stands)}</div></div>`;
+function meetCard() {
+  const j = ver.jeff;
+  return `<div class="card"><h1>Meet Jeff</h1><p>${esc(j.intro)}</p>${table(j.numbers)}<p class="muted">${esc(j.note)}</p></div>`;
 }
 function render() {
-  // step 0: meet Jeff; 1: the shock (full screen); 2..4: early, middle, late; 5: find a neighbor
   $('#who').textContent = step >= 1 ? 'Your Jeff: ' + ver.label : '';
   const fill = $('#fill');
   if (step === 1) {
-    fill.innerHTML = `<div class="bigword">${esc(ver.shock)}</div><p>${esc(ver.shockLine)}</p><button id="next">What happened next?</button>`;
+    $('#app').innerHTML = '';                  // nothing behind the red screen (the old build left a second button there)
+    fill.innerHTML = `<div class="bigword">${esc(ver.shock)}</div><p>${esc(ver.shockLine)}</p><button id="nextFill">Where does this leave him?</button>`;
     fill.classList.remove('hidden');
-    $('#next').onclick = () => go(2);
+    $('#nextFill').onclick = () => go(2);
+    window.scrollTo(0, 0);
     return;
   }
-  fill.classList.add('hidden');
-  let html = startCard();
-  if (step >= 2) html += `<div class="card"><div class="stage late">What happened</div><h2>${esc(ver.shock)}</h2><p>${esc(ver.shockLine)}</p></div>`;
-  const shown = Math.min(Math.max(step - 1, 0), 3);
-  for (let i = 0; i < shown; i++) html += stageCard(i);
-  if (step === 0) html += `<button class="primary" id="next">What happened to Jeff?</button>`;
-  else if (step < 4) html += `<button class="primary" id="next">${step === 2 ? 'A year later' : 'Later still'}</button>`;
-  else html += `<div class="neighbor"><h2>${esc(NEIGHBOR.title)}</h2><p>${esc(NEIGHBOR.text)}</p></div>`;
+  fill.classList.add('hidden'); fill.innerHTML = '';
+  let html = meetCard();
+  if (step === 0) {
+    html += `<button class="primary" id="next">What happens to Jeff?</button>`;
+  } else {
+    html += `<div class="card"><div class="label red">What happened</div><h2>${esc(ver.shock)}</h2><p>${esc(ver.shockLine)}</p></div>`;
+    html += `<div class="card" id="outcome"><div class="label">${esc(ver.when)}</div><p>${esc(ver.story)}</p>
+      <div class="label">${esc(ver.moneyTitle)}</div>${table(ver.money)}<div class="stands">${esc(ver.stands)}</div></div>`;
+    html += `<div class="neighbor"><h2>${esc(NEIGHBOR.title)}</h2><p>${esc(NEIGHBOR.text)}</p></div>`;
+  }
   $('#app').innerHTML = html;
-  const n = $('#next'); if (n) n.onclick = () => go(step + 1);
-  if (step >= 2) { const cards = document.querySelectorAll('.card'); cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  const n = $('#next'); if (n) n.onclick = () => go(1);
+  if (step === 2) { const o = $('#outcome'); if (o && o.scrollIntoView) o.scrollIntoView({ block: 'start' }); }
 }
-function go(n) { step = n; store('jeff_step', String(step)); render(); }
+function go(n) { step = n; if (!forced) store('jeff_step', String(step)); render(); }
 render();
 </script>
 </body>
